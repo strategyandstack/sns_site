@@ -177,7 +177,9 @@ export const createPricingCard = (pkg, lang = 'en') => {
     <p class="pricing-description">${pkg.description}</p>
     <div class="pricing-savings">${pkg.savings || ''}</div>
     <ul class="pricing-features">${pkg.includes.map(inc => `<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg><span>${inc}</span></li>`).join('')}</ul>
-    <a href="https://app.apollo.io/#/meet/managed-meetings/eddie/hor-57g-ivh/start" target="_blank" rel="noopener noreferrer" class="pricing-cta ${isPopular ? 'primary' : 'secondary'}">${l.cta}</a>
+    <div class="pricing-buttons">
+        <a href="https://app.apollo.io/#/meet/managed-meetings/eddie/hor-57g-ivh/start" target="_blank" rel="noopener noreferrer" class="pricing-cta ${isPopular ? 'primary' : 'secondary'}">${l.cta}</a>
+    </div>
 </div>`;
 };
 

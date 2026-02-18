@@ -432,7 +432,7 @@ function animateBlueprintContent(bp) {
 
     // Title - immediate cipher (uppercase charset)
     const title = display.querySelector('.display-title');
-    if (title) scrambleText(title, bp.name.toUpperCase(), { charsPerTick: 4 });
+    if (title) scrambleText(title, bp.name.toUpperCase(), { speed: 25, charsPerTick: 3 });
 
     // Description & Timeline - cipher with stagger
     display.querySelectorAll('.display-description, .display-timeline').forEach((el, i) => {
@@ -476,8 +476,8 @@ function animateBlueprintContent(bp) {
 
 function scrambleText(element, targetText, options = {}) {
     const chars = options.chars || 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const speed = options.speed || 20;
-    const charsPerTick = options.charsPerTick || 4;
+    const speed = options.speed || 25;
+    const charsPerTick = options.charsPerTick || 3;
     const restoreHTML = options.restoreHTML || null;
     let iteration = 0;
     // Immediately show scrambled text (no flash of real content)

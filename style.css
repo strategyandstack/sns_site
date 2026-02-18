@@ -20,11 +20,13 @@ html {
 }
 
 body {
-    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     background: #000;
     color: #fff;
     overflow-x: hidden;
+    line-height: 1.5;
 }
 
 /* Page blur overlay for CTA focus effect */
@@ -894,7 +896,7 @@ h4 {
 #pricing-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
+    gap: 12px;
 }
 
 @media (max-width: 1024px) {
@@ -913,7 +915,7 @@ h4 {
     display: flex;
     flex-direction: column;
     height: 100%;
-    padding: 28px;
+    padding: 24px 18px;
     border-radius: 14px;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.06);
@@ -955,12 +957,13 @@ h4 {
 .popular-badge span {
     background: #fff;
     color: #000;
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 800;
-    padding: 6px 14px;
+    padding: 9px 22px;
     border-radius: 20px;
     text-transform: uppercase;
     letter-spacing: 0.12em;
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
     /* Sharpness fix */
     -webkit-font-smoothing: subpixel-antialiased;
     -moz-osx-font-smoothing: auto;
@@ -1031,18 +1034,22 @@ h4 {
     margin-top: 1px;
 }
 
+.pricing-buttons {
+    margin-top: auto;
+}
+
 .pricing-cta {
-    position: relative;
+    display: block;
     width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    font-weight: 800;
-    font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    padding: 15px;
+    border-radius: 10px;
     text-align: center;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
     text-decoration: none;
-    transition: all 2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     margin-top: auto;
 }
 
@@ -1051,10 +1058,21 @@ h4 {
     color: #000;
 }
 
+.pricing-cta.primary:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+}
+
 .pricing-cta.secondary {
     background: rgba(255, 255, 255, 0.05);
     color: #fff;
     border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pricing-cta.secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
 }
 
 .pricing-cta:hover {
@@ -1336,9 +1354,11 @@ details:focus-visible {
         isolation: isolate;
     }
 
-    /* Reduce font-weight slightly for extremely small text to improve legibility on standard DPI */
-    .nav-cta {
-        font-weight: 800 !important;
+    /* Consistent font weights for high-contrast tiny text */
+    .nav-cta,
+    .pricing-cta {
+        font-weight: 700 !important;
+        letter-spacing: 0.05em !important;
     }
 }
 
