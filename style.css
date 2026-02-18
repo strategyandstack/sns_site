@@ -955,12 +955,16 @@ h4 {
 .popular-badge span {
     background: #fff;
     color: #000;
-    font-size: 8px;
-    font-weight: 900;
-    padding: 6px 12px;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 6px 14px;
     border-radius: 20px;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
+    /* Sharpness fix */
+    -webkit-font-smoothing: subpixel-antialiased;
+    -moz-osx-font-smoothing: auto;
+    text-rendering: optimizeLegibility;
 }
 
 .pricing-header {
@@ -1307,6 +1311,35 @@ details:focus-visible {
 ::selection {
     background: rgba(168, 85, 247, 0.3);
     color: #fff;
+}
+
+/* Desktop-specific sharpness improvements */
+@media screen and (min-width: 1025px) {
+
+    /* Target elements with potential sub-pixel fuzziness */
+    .nav-cta,
+    .popular-badge span,
+    .pricing-cta,
+    .btn-primary,
+    .btn-secondary {
+        -webkit-font-smoothing: subpixel-antialiased !important;
+        -moz-osx-font-smoothing: auto !important;
+        text-rendering: optimizeLegibility !important;
+        transform: perspective(1px) translateZ(0);
+        backface-visibility: hidden;
+    }
+
+    /* Isolate text layers to prevent backdrop-filter bleeding */
+    .pricing-card,
+    .glass-card,
+    nav .glass-card {
+        isolation: isolate;
+    }
+
+    /* Reduce font-weight slightly for extremely small text to improve legibility on standard DPI */
+    .nav-cta {
+        font-weight: 800 !important;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
