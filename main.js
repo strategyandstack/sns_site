@@ -6,7 +6,7 @@ const LANG = 'en';
 const emailTemplates = {
     linkedin: `{{RANDOM | Hi {{firstName}} | Hello {{firstName}} | {{firstName}},}} this is a cold message and I know you get many, so I'll keep it brief.
 
-Messages like this are the reason Rockets Traffic has helped more than 105 professionals turn their LinkedIn presence into a consistent source of leads.
+We've helped more than 105 professionals turn their LinkedIn presence into a consistent source of leads.
 
 {{RANDOM | We are opening | We're launching}} an end-of-year bundle for just 12 clients.
 
@@ -50,6 +50,7 @@ We help {{industry}} companies like {{companyName}} build outbound systems that 
 
 let currentBlueprintIndex = 0;
 let typingInterval = null;
+let typingTimer = null;
 let isTyping = false;
 let ctaHoverTimeout = null;
 let blurOverlay = null;
@@ -141,7 +142,7 @@ function initActiveNavHighlight() {
 
 function initSmoothScroll() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
+        anchor.addEventListener('click', function (e) {
             const href = this.getAttribute('href');
             if (href === '#') return;
             const target = document.querySelector(href);
@@ -157,19 +158,19 @@ function initEditorScrollEffect() {
     const editor = document.querySelector('.email-editor-container');
     const statsSection = document.getElementById('stats-section');
     if (!editor || !statsSection) return;
-    
+
     const heroSection = editor.closest('section');
     if (!heroSection) return;
-    
+
     window.addEventListener('scroll', () => {
         const scrollY = window.scrollY;
         const heroBottom = heroSection.offsetTop + heroSection.offsetHeight;
         const statsTop = statsSection.offsetTop;
-        
+
         const scrollStart = 100;
         const scrollEnd = statsTop - 100;
         const progress = Math.max(0, Math.min(1, (scrollY - scrollStart) / (scrollEnd - scrollStart)));
-        
+
         if (scrollY < scrollStart) {
             editor.style.transform = 'perspective(1000px) rotateX(0deg) scale(1)';
             editor.style.opacity = '1';
@@ -177,7 +178,7 @@ function initEditorScrollEffect() {
             const scale = 1 + (progress * 0.15);
             const rotateX = progress * -8;
             const translateY = progress * -30;
-            
+
             editor.style.transform = `perspective(1000px) rotateX(${rotateX}deg) scale(${scale}) translateY(${translateY}px)`;
             editor.style.opacity = Math.max(0, 1 - (progress * 1.2));
         } else {
@@ -189,7 +190,7 @@ function initEditorScrollEffect() {
 function initCTAFocusEffect() {
     const ctaSelectors = '.btn-primary, .btn-secondary, .display-cta, .pricing-cta';
     const ctas = document.querySelectorAll(ctaSelectors);
-    
+
     ctas.forEach(cta => {
         cta.addEventListener('mouseenter', () => {
             ctaHoverTimeout = setTimeout(() => {
@@ -199,7 +200,7 @@ function initCTAFocusEffect() {
                 if (parentCard) parentCard.classList.add('card-elevated');
             }, 300);
         });
-        
+
         cta.addEventListener('mouseleave', () => {
             if (ctaHoverTimeout) {
                 clearTimeout(ctaHoverTimeout);
@@ -211,6 +212,25 @@ function initCTAFocusEffect() {
             if (parentCard) parentCard.classList.remove('card-elevated');
         });
     });
+
+    // Fix: Clear focus effects on scroll to prevent stuck blur state
+    window.addEventListener('scroll', () => {
+        if (blurOverlay && blurOverlay.classList.contains('active')) {
+            if (ctaHoverTimeout) {
+                clearTimeout(ctaHoverTimeout);
+                ctaHoverTimeout = null;
+            }
+            blurOverlay.classList.remove('active');
+
+            // Find and reset any active focused elements
+            const activeCtas = document.querySelectorAll('.cta-focus');
+            activeCtas.forEach(cta => {
+                cta.classList.remove('cta-focus');
+                const parent = cta.closest('.glass-card, .pricing-card, .blueprint-display');
+                if (parent) parent.classList.remove('card-elevated');
+            });
+        }
+    }, { passive: true });
 }
 
 function initSectionReveals() {
@@ -240,20 +260,20 @@ function initMobileStickyCta() {
 
 function initLayout() {
     document.title = data.meta.name + " | " + data.meta.tagline;
-    
+
     // Inject A Better Way section
     const aBetterWayContainer = document.getElementById('a-better-way-container');
     if (aBetterWayContainer && data.a_better_way) {
         aBetterWayContainer.innerHTML = createABetterWaySection(data.a_better_way, LANG);
     }
-    
+
     const vpContainer = document.getElementById('value-props');
     if (vpContainer) {
         vpContainer.innerHTML = createValuePropCard('Battle Tested', data.value_proposition.supporting, 'layers') +
             createValuePropCard('Full Ownership', 'We build on your infrastructure. Accounts, data, and content stay with you forever.', 'key') +
             createValuePropCard('The Outcome', data.value_proposition.outcome, 'rocket');
     }
-    
+
     const gList = document.getElementById('guarantees-list');
     if (gList) {
         data.guarantee.what_we_guarantee.forEach(item => {
@@ -263,15 +283,15 @@ function initLayout() {
             gList.appendChild(li);
         });
     }
-    
+
     const mList = document.getElementById('market-depends-list');
     if (mList) {
         mList.innerHTML = createMarketDynamics(data.guarantee.what_depends_on_market, LANG);
     }
-    
+
     const statsGrid = document.getElementById('stats-grid');
     if (statsGrid) statsGrid.innerHTML = data.social_proof.stats.map(s => createStatItem(s)).join('');
-    
+
     const bpContainer = document.getElementById('blueprints-container');
     if (bpContainer) {
         bpContainer.innerHTML = `
@@ -286,22 +306,22 @@ ${createBlueprintAccordion(data.blueprints, LANG)}`;
             animateHoursBars();
         }, 100);
     }
-    
+
     // Inject Who This Is For section
     const whoThisIsForContainer = document.getElementById('who-this-is-for-container');
     if (whoThisIsForContainer && data.who_this_is_for) {
         whoThisIsForContainer.innerHTML = createWhoThisIsForSection(data.who_this_is_for, LANG);
     }
-    
+
     const pricingGrid = document.getElementById('pricing-grid');
     if (pricingGrid) pricingGrid.innerHTML = data.packages.map(p => createPricingCard(p, LANG)).join('');
-    
+
     const stepsContainer = document.getElementById('next-steps-container');
     if (stepsContainer) stepsContainer.innerHTML = data.next_steps.map((s, i) => createRoadmapItem(s, i)).join('');
-    
+
     const faqContainer = document.getElementById('faq-container');
     if (faqContainer) faqContainer.innerHTML = data.faq.map((f, i) => createFaqItem(f, i)).join('');
-    
+
     const ctaPrimaryTitle = document.getElementById('cta-primary-title');
     const ctaPrimarySub = document.getElementById('cta-primary-sub');
     const ctaPrimaryBtn = document.getElementById('cta-primary-btn');
@@ -310,7 +330,7 @@ ${createBlueprintAccordion(data.blueprints, LANG)}`;
     if (ctaPrimarySub) ctaPrimarySub.textContent = data.cta_sections.primary.subheadline;
     if (ctaPrimaryBtn) ctaPrimaryBtn.textContent = data.cta_sections.primary.button_text;
     if (ctaPrimarySecondary) ctaPrimarySecondary.textContent = data.cta_sections.primary.secondary_text;
-    
+
     const ctaSecondaryTitle = document.getElementById('cta-secondary-title');
     const ctaSecondarySub = document.getElementById('cta-secondary-sub');
     const ctaSecondaryBtn = document.getElementById('cta-secondary-btn');
@@ -318,12 +338,12 @@ ${createBlueprintAccordion(data.blueprints, LANG)}`;
     if (ctaSecondaryTitle) ctaSecondaryTitle.textContent = data.cta_sections.secondary.headline;
     if (ctaSecondarySub) ctaSecondarySub.textContent = data.cta_sections.secondary.subheadline;
     if (ctaSecondaryBtn) ctaSecondaryBtn.textContent = data.cta_sections.secondary.button_text;
-    
+
     if (ctaSecondaryCard && data.cta_sections.secondary.note_text) {
         const noteHtml = createSecondaryCTANote(data.cta_sections.secondary.note_text, data.cta_sections.secondary.scarcity_text);
         ctaSecondaryCard.insertAdjacentHTML('beforeend', noteHtml);
     }
-    
+
     const footerTagline = document.getElementById('footer-tagline');
     const footerPowered = document.getElementById('footer-powered');
     if (footerTagline) footerTagline.textContent = data.footer.tagline;
@@ -450,7 +470,7 @@ function initEmailEditor() {
     if (editorContainer) {
         editorContainer.style.opacity = '1';
     }
-    
+
     const tabs = document.querySelectorAll('.editor-tab');
     if (!tabs.length) return;
     Object.keys(emailTemplates).forEach(tabName => {
@@ -471,7 +491,11 @@ function initEmailEditor() {
     });
 }
 
-function stopTyping() { if (typingInterval) { clearInterval(typingInterval); typingInterval = null; } isTyping = false; }
+function stopTyping() {
+    if (typingInterval) { clearInterval(typingInterval); typingInterval = null; }
+    if (typingTimer) { clearTimeout(typingTimer); typingTimer = null; }
+    isTyping = false;
+}
 
 function typeText(tabName) {
     stopTyping();
@@ -480,23 +504,50 @@ function typeText(tabName) {
     const textElement = panel.querySelector('.editor-text');
     const template = emailTemplates[tabName];
     if (!textElement || !template) return;
+
     isTyping = true;
     const highlightedText = highlightSyntax(template);
     const tempDiv = document.createElement('div'); tempDiv.innerHTML = highlightedText;
     const plainText = tempDiv.textContent || tempDiv.innerText;
+
+    // Clear content but keep cursor
     textElement.innerHTML = '<span class="typing-cursor"></span>';
+
     let charIndex = 0;
-    typingInterval = setInterval(() => {
-        if (!isTyping) { stopTyping(); return; }
-        charIndex += 3;
-        if (charIndex >= plainText.length) {
+
+    function typeNextChar() {
+        if (!isTyping) return;
+
+        charIndex++;
+
+        if (charIndex > plainText.length) {
             textElement.innerHTML = highlightedText + '<span class="typing-cursor"></span>';
             stopTyping();
-            setTimeout(() => { const cursor = textElement.querySelector('.typing-cursor'); if (cursor) cursor.style.opacity = '0'; }, 2000);
-        } else {
-            textElement.innerHTML = getPartialHighlightedText(highlightedText, charIndex) + '<span class="typing-cursor"></span>';
+            setTimeout(() => {
+                const cursor = textElement.querySelector('.typing-cursor');
+                if (cursor) cursor.style.opacity = '0';
+            }, 2000);
+            return;
         }
-    }, 8);
+
+        // Update text
+        textElement.innerHTML = getPartialHighlightedText(highlightedText, charIndex) + '<span class="typing-cursor"></span>';
+
+        // Humanize typing speed - even faster
+        let delay = 10 + Math.random() * 15; // Fast base speed 10-25ms
+
+        const char = plainText[charIndex - 1];
+        if (char === ' ') delay += 10;
+        if (['.', ',', '?', '!'].includes(char)) delay += 40;
+        if (char === '\n') delay += 100;
+
+        // Occasional "thinking" pause
+        if (Math.random() > 0.99) delay += 50;
+
+        typingTimer = setTimeout(typeNextChar, delay);
+    }
+
+    typeNextChar();
 }
 
 function getPartialHighlightedText(html, charCount) {
@@ -513,7 +564,7 @@ function getPartialHighlightedText(html, charCount) {
 
 function highlightSyntax(text) {
     let escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    
+
     // Token color mapping
     const tokenColors = {
         'firstName': 'syntax-firstname',
@@ -521,13 +572,13 @@ function highlightSyntax(text) {
         'companyName': 'syntax-company',
         'industry': 'syntax-industry'
     };
-    
+
     // Helper to colorize a single token
     const colorizeToken = (match, varName) => {
         const colorClass = tokenColors[varName] || 'syntax-variable';
         return `<span class="${colorClass}">{{${varName}}}</span>`;
     };
-    
+
     // Process RANDOM blocks - improved regex to handle nested tokens
     escaped = escaped.replace(/\{\{RANDOM\s*\|((?:[^{}]|\{\{[^}]+\}\})+)\}\}/g, (m, content) => {
         const parts = content.split('|').map(p => p.trim());
@@ -537,7 +588,7 @@ function highlightSyntax(text) {
         }).join('');
         return `<span class="syntax-random">{{RANDOM}}</span> ${highlighted}`;
     });
-    
+
     // Process remaining standalone tokens
     return escaped.replace(/\{\{(\w+)\}\}/g, colorizeToken);
 }
@@ -558,4 +609,14 @@ function initStatsCounter() {
 }
 
 function initAnimations() {
+    const tl = gsap.timeline({ defaults: { duration: 0.6, ease: 'power2.out' } });
+
+    tl.from('nav', {
+        opacity: 0,
+        duration: 0.4,
+        clearProps: 'all'
+    });
+
+    // Elements are now visible immediately by default.
+    // We removed the .from() animations that were causing them to start at opacity 0.
 }
