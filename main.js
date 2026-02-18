@@ -432,7 +432,7 @@ function animateBlueprintContent(bp) {
 
     // Title - immediate cipher (uppercase charset)
     const title = display.querySelector('.display-title');
-    if (title) scrambleText(title, bp.name.toUpperCase(), { charsPerTick: 3 });
+    if (title) scrambleText(title, bp.name.toUpperCase(), { charsPerTick: 4 });
 
     // Description & Timeline - cipher with stagger
     display.querySelectorAll('.display-description, .display-timeline').forEach((el, i) => {
@@ -442,7 +442,7 @@ function animateBlueprintContent(bp) {
         el.style.opacity = '0';
         el.style.transition = 'opacity 0.2s ease';
         setTimeout(() => {
-            scrambleText(el, text, { chars: mixedChars, charsPerTick: 3, restoreHTML: hasHTML ? html : null });
+            scrambleText(el, text, { chars: mixedChars, restoreHTML: hasHTML ? html : null });
             el.style.opacity = '1';
         }, 200 + i * 150);
     });
@@ -453,7 +453,7 @@ function animateBlueprintContent(bp) {
         el.style.opacity = '0';
         el.style.transition = 'opacity 0.15s ease';
         setTimeout(() => {
-            scrambleText(el, text, { chars: mixedChars, charsPerTick: 2 });
+            scrambleText(el, text, { chars: mixedChars });
             el.style.opacity = '1';
         }, 400 + i * 80);
     });
@@ -477,7 +477,7 @@ function animateBlueprintContent(bp) {
 function scrambleText(element, targetText, options = {}) {
     const chars = options.chars || 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     const speed = options.speed || 25;
-    const charsPerTick = options.charsPerTick || 3;
+    const charsPerTick = options.charsPerTick || 4;
     const restoreHTML = options.restoreHTML || null;
     let iteration = 0;
     // Immediately show scrambled text (no flash of real content)

@@ -442,7 +442,7 @@ function animateBlueprintContent(bp) {
         el.style.opacity = '0';
         el.style.transition = 'opacity 0.2s ease';
         setTimeout(() => {
-            scrambleText(el, text, { chars: mixedChars, charsPerTick: 3, restoreHTML: hasHTML ? html : null });
+            scrambleText(el, text, { chars: mixedChars, restoreHTML: hasHTML ? html : null });
             el.style.opacity = '1';
         }, 200 + i * 150);
     });
@@ -453,7 +453,7 @@ function animateBlueprintContent(bp) {
         el.style.opacity = '0';
         el.style.transition = 'opacity 0.15s ease';
         setTimeout(() => {
-            scrambleText(el, text, { chars: mixedChars, charsPerTick: 2 });
+            scrambleText(el, text, { chars: mixedChars });
             el.style.opacity = '1';
         }, 400 + i * 80);
     });
