@@ -476,7 +476,7 @@ function animateBlueprintContent(bp) {
 
 function scrambleText(element, targetText, options = {}) {
     const chars = options.chars || 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const speed = options.speed || 25;
+    const speed = options.speed || 20;
     const charsPerTick = options.charsPerTick || 4;
     const restoreHTML = options.restoreHTML || null;
     let iteration = 0;
