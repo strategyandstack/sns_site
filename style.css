@@ -538,11 +538,7 @@ h4 {
     border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.blueprint-nav:hover .blueprint-nav-item:not(:hover):not(.active) {
-    filter: blur(2px);
-    opacity: 0.4;
-    transform: scale(0.98);
-}
+
 
 .blueprint-nav-item:hover {
     border-color: rgba(255, 255, 255, 0.15);

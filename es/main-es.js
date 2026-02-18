@@ -187,31 +187,36 @@ function initEditorScrollEffect() {
     }, { passive: true });
 }
 
+function clearAllFocusEffects() {
+    if (ctaHoverTimeout) { clearTimeout(ctaHoverTimeout); ctaHoverTimeout = null; }
+    blurOverlay.classList.remove('active');
+    document.querySelectorAll('.cta-focus').forEach(el => el.classList.remove('cta-focus'));
+    document.querySelectorAll('.card-elevated').forEach(el => el.classList.remove('card-elevated'));
+}
+
 function initCTAFocusEffect() {
-    const ctaSelectors = '.btn-primary, .btn-secondary, .display-cta, .pricing-cta';
-    const ctas = document.querySelectorAll(ctaSelectors);
-
-    ctas.forEach(cta => {
-        cta.addEventListener('mouseenter', () => {
-            ctaHoverTimeout = setTimeout(() => {
-                blurOverlay.classList.add('active');
-                cta.classList.add('cta-focus');
-                const parentCard = cta.closest('.glass-card, .pricing-card, .blueprint-display');
-                if (parentCard) parentCard.classList.add('card-elevated');
-            }, 300);
-        });
-
-        cta.addEventListener('mouseleave', () => {
-            if (ctaHoverTimeout) {
-                clearTimeout(ctaHoverTimeout);
-                ctaHoverTimeout = null;
-            }
-            blurOverlay.classList.remove('active');
-            cta.classList.remove('cta-focus');
+    // Use event delegation on the document to avoid stacking duplicate listeners
+    // when loadBlueprint re-renders the display panel.
+    document.addEventListener('mouseenter', (e) => {
+        const cta = e.target.closest('.btn-primary, .btn-secondary, .display-cta, .pricing-cta');
+        if (!cta) return;
+        clearAllFocusEffects();
+        ctaHoverTimeout = setTimeout(() => {
+            blurOverlay.classList.add('active');
+            cta.classList.add('cta-focus');
             const parentCard = cta.closest('.glass-card, .pricing-card, .blueprint-display');
-            if (parentCard) parentCard.classList.remove('card-elevated');
-        });
-    });
+            if (parentCard) parentCard.classList.add('card-elevated');
+        }, 300);
+    }, true);
+
+    document.addEventListener('mouseleave', (e) => {
+        const cta = e.target.closest('.btn-primary, .btn-secondary, .display-cta, .pricing-cta');
+        if (!cta) return;
+        clearAllFocusEffects();
+    }, true);
+
+    // Also clear on scroll to prevent stuck blur state
+    window.addEventListener('scroll', clearAllFocusEffects, { passive: true });
 }
 
 function initSectionReveals() {
@@ -411,7 +416,7 @@ function loadBlueprint(index) {
     animateBlueprintContent(bp);
     setTimeout(() => display.classList.add('active'), 700);
     setTimeout(() => animateHoursBars(), 100);
-    initCTAFocusEffect();
+    // CTA focus effect is handled by delegated listeners — no re-init needed
     try {
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
@@ -423,27 +428,75 @@ function loadBlueprint(index) {
 
 function animateBlueprintContent(bp) {
     const display = document.getElementById('blueprint-display');
+    const mixedChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+    // Title - immediate cipher (uppercase charset)
     const title = display.querySelector('.display-title');
     if (title) scrambleText(title, bp.name.toUpperCase());
+
+    // Description & Timeline - cipher with stagger
     display.querySelectorAll('.display-description, .display-timeline').forEach((el, i) => {
-        el.style.opacity = '0'; el.style.transform = 'translateY(8px)';
-        setTimeout(() => { el.style.transition = 'all 0.4s ease'; el.style.opacity = '1'; el.style.transform = 'translateY(0)'; }, 100 + i * 50);
+        const text = el.textContent;
+        const html = el.innerHTML;
+        const hasHTML = html.includes('<');
+        el.style.opacity = '0';
+        el.style.transition = 'opacity 0.2s ease';
+        setTimeout(() => {
+            scrambleText(el, text, { chars: mixedChars, charsPerTick: 3, restoreHTML: hasHTML ? html : null });
+            el.style.opacity = '1';
+        }, 200 + i * 150);
     });
+
+    // Feature list items - cipher staggered
     display.querySelectorAll('.feature-list li').forEach((el, i) => {
-        el.style.opacity = '0'; el.style.transform = 'translateY(8px)';
-        setTimeout(() => { el.style.transition = 'all 0.3s ease'; el.style.opacity = '1'; el.style.transform = 'translateY(0)'; }, 250 + i * 40);
+        const text = el.textContent;
+        el.style.opacity = '0';
+        el.style.transition = 'opacity 0.15s ease';
+        setTimeout(() => {
+            scrambleText(el, text, { chars: mixedChars, charsPerTick: 2 });
+            el.style.opacity = '1';
+        }, 400 + i * 80);
     });
+
+    // Footer - price gets cipher, whole footer fades in
     const footer = display.querySelector('.display-footer');
-    if (footer) { footer.style.opacity = '0'; setTimeout(() => { footer.style.transition = 'opacity 0.4s ease'; footer.style.opacity = '1'; }, 450); }
+    if (footer) {
+        footer.style.opacity = '0';
+        setTimeout(() => {
+            footer.style.transition = 'opacity 0.4s ease';
+            footer.style.opacity = '1';
+            const price = footer.querySelector('.display-price');
+            if (price) {
+                const priceText = price.textContent;
+                scrambleText(price, priceText, { charsPerTick: 1 });
+            }
+        }, 700);
+    }
 }
 
-function scrambleText(element, targetText) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+function scrambleText(element, targetText, options = {}) {
+    const chars = options.chars || 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const speed = options.speed || 30;
+    const charsPerTick = options.charsPerTick || 2;
+    const restoreHTML = options.restoreHTML || null;
     let iteration = 0;
+    // Immediately show scrambled text (no flash of real content)
+    element.textContent = targetText.split('').map(char =>
+        (char === ' ' || char === '\n') ? char : chars[Math.floor(Math.random() * chars.length)]
+    ).join('');
     const interval = setInterval(() => {
-        element.textContent = targetText.split('').map((char, idx) => char === ' ' ? ' ' : idx < iteration ? targetText[idx] : chars[Math.floor(Math.random() * chars.length)]).join('');
-        if (++iteration > targetText.length) { element.textContent = targetText; clearInterval(interval); }
-    }, 25);
+        iteration += charsPerTick;
+        if (iteration > targetText.length) {
+            if (restoreHTML) element.innerHTML = restoreHTML;
+            else element.textContent = targetText;
+            clearInterval(interval);
+            return;
+        }
+        element.textContent = targetText.split('').map((char, idx) => {
+            if (char === ' ' || char === '\n') return char;
+            return idx < iteration ? targetText[idx] : chars[Math.floor(Math.random() * chars.length)];
+        }).join('');
+    }, speed);
 }
 
 function initEmailEditor() {
