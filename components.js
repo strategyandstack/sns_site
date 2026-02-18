@@ -10,7 +10,7 @@ export const createValuePropCard = (title, description, icon) => `
 export const createABetterWaySection = (data, lang = 'en') => {
     const problem = data.problem;
     const solution = data.solution;
-    
+
     return `
 <section id="a-better-way" class="py-16 px-4">
     <div class="max-w-6xl mx-auto">
@@ -40,7 +40,7 @@ export const createABetterWaySection = (data, lang = 'en') => {
             <div class="better-way-card solution-card glass-card p-8 rounded-2xl border-white/10 relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-purple-500/50 to-cyan-500/50"></div>
                 <div class="solution-badge inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 mb-6">
-                    <img src="/favicon.svg" alt="" class="w-3.5 h-3.5">
+                    <img src="${lang === 'es' ? '../' : ''}favicon.svg" alt="" class="w-3.5 h-3.5" width="14" height="14">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-purple-400">${solution.badge}</span>
                 </div>
                 <h3 class="text-2xl md:text-3xl font-black mb-4 tracking-tight">${solution.title}</h3>
@@ -67,7 +67,7 @@ export const createWhoThisIsForSection = (data, lang = 'en') => {
         <div class="grid lg:grid-cols-2 gap-12 items-center">
             <div class="section-reveal">
                 <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 mb-6">
-                    <img src="/favicon.svg" alt="" class="w-3.5 h-3.5">
+                    <img src="${lang === 'es' ? '../' : ''}favicon.svg" alt="" class="w-3.5 h-3.5" width="14" height="14">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-purple-400">${data.section_label}</span>
                 </div>
                 <h2 class="text-3xl md:text-4xl font-black mb-4 tracking-tighter">${data.section_title}</h2>
@@ -98,22 +98,22 @@ export const createBlueprintNavItem = (bp, isActive = false) => `
 </div>`;
 
 export const createBlueprintDisplay = (bp, lang = 'en') => {
-    const l = lang === 'es' 
+    const l = lang === 'es'
         ? { blueprint: 'Nuestro Sistema', manual: 'Manual', timeline: 'Tiempo', cta: 'Agenda una Llamada', custom: 'Cotización Personalizada' }
         : { blueprint: 'Our System', manual: 'Manual', timeline: 'Timeline', cta: 'Book Strategy Call', custom: 'Custom Quote' };
-    
+
     const priceDisplay = bp.price === 'Custom' || bp.price === 'Personalizado' ? l.custom : bp.price;
     const maxHours = 200;
     const bpPct = bp.comparison.blueprint_hours ? (bp.comparison.blueprint_hours / maxHours) * 100 : 0;
     const manPct = bp.comparison.manual_hours ? (bp.comparison.manual_hours / maxHours) * 100 : 0;
-    
+
     // Only show hours comparison if both values exist
     const hoursHtml = (bp.comparison.blueprint_hours && bp.comparison.manual_hours) ? `
 <div class="hours-comparison">
     <div class="hours-row"><span class="hours-label">${l.blueprint}</span><div class="hours-bar-container"><div class="hours-bar blueprint" style="width:0%" data-width="${bpPct}%"></div></div><span class="hours-value">${bp.comparison.blueprint_hours} hrs</span></div>
     <div class="hours-row"><span class="hours-label">${l.manual}</span><div class="hours-bar-container"><div class="hours-bar manual" style="width:0%" data-width="${manPct}%"></div></div><span class="hours-value manual">${bp.comparison.manual_hours}+ hrs</span></div>
 </div>` : '';
-    
+
     return `
 <div class="blueprint-lightbar"></div><div class="scan-line"></div>
 <div class="display-header">
@@ -130,10 +130,10 @@ ${hoursHtml}
 };
 
 export const createBlueprintAccordion = (blueprints, lang = 'en') => {
-    const l = lang === 'es' 
+    const l = lang === 'es'
         ? { blueprint: 'Nuestro Sistema', manual: 'Enfoque Manual', cta: 'Agendar', timeline: 'Tiempo', custom: 'Personalizado' }
         : { blueprint: 'Our System', manual: 'Manual Approach', cta: 'Book Call', timeline: 'Timeline', custom: 'Custom' };
-    
+
     return `<div class="blueprint-accordion">${blueprints.map((bp, i) => {
         const price = bp.price === 'Custom' || bp.price === 'Personalizado' ? l.custom : bp.price;
         // Only show hours if both values exist
@@ -146,7 +146,7 @@ export const createBlueprintAccordion = (blueprints, lang = 'en') => {
 <div class="blueprint-accordion-item ${i === 0 ? 'active' : ''}" data-index="${i}">
     <div class="blueprint-accordion-header">
         <div class="accordion-title-wrap"><span class="accordion-number">${String(bp.number).padStart(2, '0')}</span><span class="accordion-title">${bp.name}</span></div>
-        <div class="accordion-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+        <div class="accordion-icon"><i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-300"></i></div>
     </div>
     <div class="blueprint-accordion-content"><div class="accordion-inner">
         <p class="text-sm text-white/70 mb-4 leading-relaxed">${bp.description}</p>
@@ -165,10 +165,10 @@ export const createBlueprintAccordion = (blueprints, lang = 'en') => {
 export const createPricingCard = (pkg, lang = 'en') => {
     const isPopular = pkg.popular;
     const isCustom = pkg.price === 'Custom' || pkg.price === 'Personalizado';
-    const l = lang === 'es' 
-        ? { popular: 'Más Popular', cta: 'Comenzar', custom: 'Personalizado' } 
+    const l = lang === 'es'
+        ? { popular: 'Más Popular', cta: 'Comenzar', custom: 'Personalizado' }
         : { popular: 'Most Popular', cta: 'Get Started', custom: 'Custom' };
-    
+
     return `
 <div class="pricing-card ${isPopular ? 'popular' : ''}">
     ${isPopular ? `<div class="popular-badge"><span>${l.popular}</span></div>` : '<div style="height:38px;"></div>'}
