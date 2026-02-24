@@ -94,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- After first paint: populate below-fold content ---
     afterPaint(() => {
         initLayoutDeferred();
+        initSectionReveals(); // Re-observe newly injected .section-reveal elements
         initBlueprintInteraction();
         initBlueprintAccordion();
         initEmailEditor();
