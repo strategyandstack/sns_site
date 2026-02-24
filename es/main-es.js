@@ -53,7 +53,6 @@ Ayudamos a empresas de {{industry}} como {{companyName}} a construir sistemas de
 };
 
 let currentBlueprintIndex = 0;
-let typingInterval = null;
 let typingTimer = null;
 let isTyping = false;
 let ctaHoverTimeout = null;
@@ -111,8 +110,8 @@ function initMouseGlow() {
         if (isMoving) {
             glowX += (mouseX - glowX) * 0.1;
             glowY += (mouseY - glowY) * 0.1;
-            glow.style.left = glowX + 'px';
-            glow.style.top = glowY + 'px';
+            // Use transform instead of left/top to avoid layout triggers (TBT & INP improvements)
+            glow.style.transform = `translate3d(${glowX}px, ${glowY}px, 0) translate(-50%, -50%)`;
 
             // Stop animating if we are very close to the target
             if (Math.abs(mouseX - glowX) < 0.1 && Math.abs(mouseY - glowY) < 0.1) {
@@ -223,6 +222,7 @@ function initCTAFocusEffect() {
     // Use event delegation on the document to avoid stacking duplicate listeners
     // when loadBlueprint re-renders the display panel.
     document.addEventListener('mouseenter', (e) => {
+        if (!e.target || typeof e.target.closest !== 'function') return;
         const cta = e.target.closest('.btn-primary, .btn-secondary, .display-cta, .pricing-cta');
         if (!cta) return;
         clearAllFocusEffects();
@@ -235,6 +235,7 @@ function initCTAFocusEffect() {
     }, true);
 
     document.addEventListener('mouseleave', (e) => {
+        if (!e.target || typeof e.target.closest !== 'function') return;
         const cta = e.target.closest('.btn-primary, .btn-secondary, .display-cta, .pricing-cta');
         if (!cta) return;
         clearAllFocusEffects();
@@ -590,19 +591,34 @@ function scrambleText(element, targetText, options = {}) {
     element.textContent = targetText.split('').map(char =>
         (char === ' ' || char === '\n') ? char : chars[Math.floor(Math.random() * chars.length)]
     ).join('');
-    const interval = setInterval(() => {
-        iteration += charsPerTick;
-        if (iteration > targetText.length) {
-            if (restoreHTML) element.innerHTML = restoreHTML;
-            else element.textContent = targetText;
-            clearInterval(interval);
-            return;
+
+    let lastTime = 0;
+    let frameId;
+
+    function tick(time) {
+        if (!lastTime) lastTime = time;
+        const elapsed = time - lastTime;
+
+        if (elapsed > speed) {
+            iteration += charsPerTick;
+            lastTime = time;
+
+            if (iteration > targetText.length) {
+                if (restoreHTML) element.innerHTML = restoreHTML;
+                else element.textContent = targetText;
+                cancelAnimationFrame(frameId);
+                return;
+            }
+
+            element.textContent = targetText.split('').map((char, idx) => {
+                if (char === ' ' || char === '\n') return char;
+                return idx < iteration ? targetText[idx] : chars[Math.floor(Math.random() * chars.length)];
+            }).join('');
         }
-        element.textContent = targetText.split('').map((char, idx) => {
-            if (char === ' ' || char === '\n') return char;
-            return idx < iteration ? targetText[idx] : chars[Math.floor(Math.random() * chars.length)];
-        }).join('');
-    }, speed);
+        frameId = requestAnimationFrame(tick);
+    }
+
+    frameId = requestAnimationFrame(tick);
 }
 
 function initEmailEditor() {
@@ -632,7 +648,6 @@ function initEmailEditor() {
 }
 
 function stopTyping() {
-    if (typingInterval) { clearInterval(typingInterval); typingInterval = null; }
     if (typingTimer) { clearTimeout(typingTimer); typingTimer = null; }
     isTyping = false;
 }
@@ -647,59 +662,69 @@ function typeText(tabName) {
 
     isTyping = true;
     const highlightedText = highlightSyntax(template);
-    const tempDiv = document.createElement('div'); tempDiv.innerHTML = highlightedText;
-    const plainText = tempDiv.textContent || tempDiv.innerText;
 
-    // Clear content but keep cursor
-    textElement.innerHTML = '<span class="typing-cursor"></span>';
+    // Parse the highlighted text into individual character elements inside their spans
+    const container = document.createElement('div');
+    container.style.display = 'inline';
+    container.innerHTML = highlightedText;
+
+    const charsToType = [];
+
+    function processNode(node) {
+        if (node.nodeType === 3) { // Node.TEXT_NODE
+            const text = node.nodeValue;
+            const fragment = document.createDocumentFragment();
+            for (let i = 0; i < text.length; i++) {
+                const charSpan = document.createElement('span');
+                charSpan.textContent = text[i];
+                charSpan.style.opacity = '0';
+                fragment.appendChild(charSpan);
+                charsToType.push(charSpan);
+            }
+            node.parentNode.replaceChild(fragment, node);
+        } else if (node.nodeType === 1) { // Node.ELEMENT_NODE
+            Array.from(node.childNodes).forEach(processNode);
+        }
+    }
+
+    Array.from(container.childNodes).forEach(processNode);
+
+    textElement.innerHTML = '';
+    textElement.appendChild(container);
+
+    const cursor = document.createElement('span');
+    cursor.className = 'typing-cursor';
+    textElement.appendChild(cursor);
 
     let charIndex = 0;
 
     function typeNextChar() {
         if (!isTyping) return;
 
-        charIndex++;
-
-        if (charIndex > plainText.length) {
-            textElement.innerHTML = highlightedText + '<span class="typing-cursor"></span>';
+        if (charIndex >= charsToType.length) {
             stopTyping();
             setTimeout(() => {
-                const cursor = textElement.querySelector('.typing-cursor');
                 if (cursor) cursor.style.opacity = '0';
             }, 2000);
             return;
         }
 
-        // Update text
-        textElement.innerHTML = getPartialHighlightedText(highlightedText, charIndex) + '<span class="typing-cursor"></span>';
+        const charSpan = charsToType[charIndex];
+        charSpan.style.opacity = '1';
 
-        // Humanize typing speed - even faster
-        let delay = 10 + Math.random() * 15; // Fast base speed 10-25ms
-
-        const char = plainText[charIndex - 1];
+        // Humanize typing speed
+        let delay = 10 + Math.random() * 15;
+        const char = charSpan.textContent;
         if (char === ' ') delay += 10;
         if (['.', ',', '?', '!'].includes(char)) delay += 40;
         if (char === '\n') delay += 100;
-
-        // Occasional "thinking" pause
         if (Math.random() > 0.99) delay += 50;
 
+        charIndex++;
         typingTimer = setTimeout(typeNextChar, delay);
     }
 
     typeNextChar();
-}
-
-function getPartialHighlightedText(html, charCount) {
-    let result = '', visibleChars = 0, i = 0;
-    while (i < html.length && visibleChars < charCount) {
-        if (html[i] === '<') { const tagEnd = html.indexOf('>', i); if (tagEnd !== -1) { result += html.substring(i, tagEnd + 1); i = tagEnd + 1; continue; } }
-        if (html[i] === '&') { const semi = html.indexOf(';', i); if (semi !== -1 && semi - i < 10) { result += html.substring(i, semi + 1); visibleChars++; i = semi + 1; continue; } }
-        result += html[i]; visibleChars++; i++;
-    }
-    const open = (result.match(/<span[^>]*>/g) || []).length, close = (result.match(/<\/span>/g) || []).length;
-    for (let j = 0; j < open - close; j++) result += '</span>';
-    return result;
 }
 
 function highlightSyntax(text) {
