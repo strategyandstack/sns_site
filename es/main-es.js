@@ -399,7 +399,10 @@ function initBlueprintAccordion() {
         item.querySelector('.blueprint-accordion-header').addEventListener('click', () => {
             const wasActive = item.classList.contains('active');
             items.forEach(i => i.classList.remove('active'));
-            if (!wasActive) item.classList.add('active');
+            if (!wasActive) {
+                item.classList.add('active');
+                setTimeout(() => animateHoursBars(), 100);
+            }
         });
     });
 }

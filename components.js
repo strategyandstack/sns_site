@@ -136,11 +136,23 @@ export const createBlueprintAccordion = (blueprints, lang = 'en') => {
 
     return `<div class="blueprint-accordion">${blueprints.map((bp, i) => {
         const price = bp.price === 'Custom' || bp.price === 'Personalizado' ? l.custom : bp.price;
-        // Only show hours if both values exist
+        const maxHours = 200;
+        const bpPct = bp.comparison.blueprint_hours ? (bp.comparison.blueprint_hours / maxHours) * 100 : 0;
+        const manPct = bp.comparison.manual_hours ? (bp.comparison.manual_hours / maxHours) * 100 : 0;
+
+        // Add visual bars for mobile
         const hours = (bp.comparison.blueprint_hours && bp.comparison.manual_hours) ? `
 <div class="mobile-hours">
-    <div class="mobile-hours-row"><span class="text-xs text-white/60 uppercase tracking-wider font-bold">${l.blueprint}</span><span class="text-sm font-bold">${bp.comparison.blueprint_hours} hrs</span></div>
-    <div class="mobile-hours-row"><span class="text-xs text-white/60 uppercase tracking-wider font-bold">${l.manual}</span><span class="text-sm font-bold manual-time">${bp.comparison.manual_hours}+ hrs</span></div>
+    <div class="hours-row">
+        <span class="hours-label">${l.blueprint}</span>
+        <div class="hours-bar-container"><div class="hours-bar blueprint" style="width:0%" data-width="${bpPct}%"></div></div>
+        <span class="hours-value text-xs">${bp.comparison.blueprint_hours}h</span>
+    </div>
+    <div class="hours-row">
+        <span class="hours-label">${l.manual}</span>
+        <div class="hours-bar-container"><div class="hours-bar manual" style="width:0%" data-width="${manPct}%"></div></div>
+        <span class="hours-value manual text-xs px-0">${bp.comparison.manual_hours}h+</span>
+    </div>
 </div>` : '';
         return `
 <div class="blueprint-accordion-item ${i === 0 ? 'active' : ''}" data-index="${i}">
@@ -149,8 +161,8 @@ export const createBlueprintAccordion = (blueprints, lang = 'en') => {
         <div class="accordion-icon"><i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-300"></i></div>
     </div>
     <div class="blueprint-accordion-content"><div class="accordion-inner">
-        <p class="text-sm text-white/70 mb-4 leading-relaxed">${bp.description}</p>
-        ${bp.timeline ? `<p class="text-xs text-white/60 mb-4"><strong class="text-white/70">${l.timeline}:</strong> ${bp.timeline}</p>` : ''}
+        <p class="text-xs text-white/70 mb-4 leading-relaxed">${bp.description}</p>
+        ${bp.timeline ? `<p class="text-[10px] text-white/60 mb-4"><strong class="text-white/70">${l.timeline}:</strong> ${bp.timeline}</p>` : ''}
         ${hours}
         <ul class="space-y-2 mb-4">${bp.deliverables.map(d => `<li class="flex items-start gap-2 text-xs text-white/70"><span class="text-white/55">→</span>${d}</li>`).join('')}</ul>
         <div class="flex items-center justify-between pt-4 border-t border-white/5">
