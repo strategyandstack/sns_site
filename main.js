@@ -712,13 +712,13 @@ function typeText(tabName) {
         const charSpan = charsToType[charIndex];
         charSpan.style.opacity = '1';
 
-        // Humanize typing speed
-        let delay = 10 + Math.random() * 15;
+        // Humanize typing speed (increased by 30%)
+        let delay = (10 + Math.random() * 15) * 0.7;
         const char = charSpan.textContent;
-        if (char === ' ') delay += 10;
-        if (['.', ',', '?', '!'].includes(char)) delay += 40;
-        if (char === '\n') delay += 100;
-        if (Math.random() > 0.99) delay += 50;
+        if (char === ' ') delay += 7;
+        if (['.', ',', '?', '!'].includes(char)) delay += 28;
+        if (char === '\n') delay += 70;
+        if (Math.random() > 0.99) delay += 35;
 
         charIndex++;
         typingTimer = setTimeout(typeNextChar, delay);
