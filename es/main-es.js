@@ -712,7 +712,7 @@ function typeText(tabName) {
         const charSpan = charsToType[charIndex];
         charSpan.style.opacity = '1';
 
-        // Humanize typing speed (increased by 30%)
+        // Humanize typing speed
         let delay = (10 + Math.random() * 15) * 0.7;
         const char = charSpan.textContent;
         if (char === ' ') delay += 7;
