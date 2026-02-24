@@ -78,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initStatsCounter();
     initMobileStickyCta();
     initCTAFocusEffect();
-    initAnimations();
     initBookingModal();
     try {
         if (typeof lucide !== 'undefined') {
@@ -749,15 +748,3 @@ function initStatsCounter() {
     stats.forEach(stat => observer.observe(stat));
 }
 
-function initAnimations() {
-    const tl = gsap.timeline({ defaults: { duration: 0.6, ease: 'power2.out' } });
-
-    tl.from('nav', {
-        opacity: 0,
-        duration: 0.4,
-        clearProps: 'all'
-    });
-
-    // Elements are now visible immediately by default.
-    // We removed the .from() animations that were causing them to start at opacity 0.
-}

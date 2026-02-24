@@ -78,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initStatsCounter();
     initMobileStickyCta();
     initCTAFocusEffect();
-    initAnimations();
     initBookingModal();
     try {
         if (typeof lucide !== 'undefined') {
