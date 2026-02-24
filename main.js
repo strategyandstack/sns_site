@@ -3,8 +3,8 @@ import { createValuePropCard, createBlueprintNavItem, createBlueprintDisplay, cr
 
 const LANG = 'en';
 const TIDY_LINKS = {
-    discovery: 'https:
-    strategy: 'https:
+    discovery: 'https://tidycal.com/strategyandstack/discovery',
+    strategy: 'https://tidycal.com/strategyandstack/strategy'
 };
 
 const emailTemplates = {
@@ -102,7 +102,7 @@ function initMouseGlow() {
         glowY += (mouseY - glowY) * 0.1;
         glow.style.transform = `translate3d(${glowX}px, ${glowY}px, 0) translate(-50%, -50%)`;
 
-        
+        // Stop the loop once we've converged
         if (Math.abs(mouseX - glowX) < 0.5 && Math.abs(mouseY - glowY) < 0.5) {
             animating = false;
             return;
@@ -113,7 +113,7 @@ function initMouseGlow() {
     document.addEventListener('mousemove', (e) => {
         mouseX = e.clientX;
         mouseY = e.clientY;
-        
+        // Restart the animation loop only if it isn't already running
         if (!animating) {
             animating = true;
             requestAnimationFrame(animate);
@@ -121,12 +121,12 @@ function initMouseGlow() {
     }, { passive: true });
 }
 
-
-
+// === Unified Scroll Handler ===
+// All scroll-dependent logic is consolidated here to avoid multiple listeners.
 function initUnifiedScrollHandler() {
     const callbacks = [];
 
-    
+    // 1. Scroll progress bar
     const progress = document.createElement('div');
     progress.className = 'scroll-progress';
     document.body.appendChild(progress);
@@ -136,7 +136,7 @@ function initUnifiedScrollHandler() {
         progress.style.transform = `scaleX(${scrollTop / docHeight})`;
     });
 
-    
+    // 2. Nav scroll state
     const nav = document.querySelector('nav');
     if (nav) {
         callbacks.push(() => {
@@ -144,7 +144,7 @@ function initUnifiedScrollHandler() {
         });
     }
 
-    
+    // 3. Editor parallax scroll effect
     const editor = document.querySelector('.email-editor-container');
     const statsSection = document.getElementById('stats-section');
     if (editor && statsSection && editor.closest('section')) {
@@ -170,10 +170,10 @@ function initUnifiedScrollHandler() {
         });
     }
 
-    
+    // 4. Clear CTA focus effects on scroll
     callbacks.push(clearAllFocusEffects);
 
-    
+    // 5. Mobile sticky CTA
     const sticky = document.querySelector('.mobile-sticky-cta');
     const hero = document.querySelector('.hero-content');
     const footer = document.querySelector('footer');
@@ -185,7 +185,7 @@ function initUnifiedScrollHandler() {
         });
     }
 
-    
+    // Single listener, single RAF gate
     let ticking = false;
     window.addEventListener('scroll', () => {
         if (!ticking) {
@@ -227,7 +227,7 @@ function initSmoothScroll() {
     });
 }
 
-
+// Editor scroll effect is now handled by the unified scroll handler
 
 function clearAllFocusEffects() {
     if (ctaHoverTimeout) { clearTimeout(ctaHoverTimeout); ctaHoverTimeout = null; }
@@ -237,8 +237,8 @@ function clearAllFocusEffects() {
 }
 
 function initCTAFocusEffect() {
-    
-    
+    // Use event delegation on the document to avoid stacking duplicate listeners
+    // when loadBlueprint re-renders the display panel.
     document.addEventListener('mouseenter', (e) => {
         if (!e.target || typeof e.target.closest !== 'function') return;
         const cta = e.target.closest('.btn-primary, .btn-secondary, .display-cta, .pricing-cta');
@@ -258,7 +258,7 @@ function initCTAFocusEffect() {
         if (!cta) return;
         clearAllFocusEffects();
     }, true);
-    
+    // CTA focus clear on scroll is now handled by the unified scroll handler
 }
 
 function initSectionReveals() {
@@ -289,7 +289,7 @@ function initBookingModal() {
         const baseUrl = TIDY_LINKS[type] || TIDY_LINKS.discovery;
         const trackingUrl = `${baseUrl}?utm_source=Website&utm_medium=CTA&utm_campaign=${code}`;
 
-        
+        // Reset loader and title
         if (loader) loader.style.opacity = '1';
         if (modalTitle) modalTitle.textContent = type === 'strategy' ? 'Sales Strategy Session' : 'Discovery Call';
         if (modalSubtitle) modalSubtitle.textContent = type === 'strategy' ? '30 minutes • Working Session' : '15 minutes • Alignment Check';
@@ -297,14 +297,14 @@ function initBookingModal() {
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
 
-        
+        // Animate modal in
         gsap.to(modal, { opacity: 1, duration: 0.4, ease: 'power2.out' });
         gsap.fromTo('.booking-modal-content-wrapper',
             { y: 30, scale: 0.98 },
             { y: 0, scale: 1, duration: 0.5, ease: 'power2.out', delay: 0.1 }
         );
 
-        
+        // Load iframe
         const iframe = document.createElement('iframe');
         iframe.src = trackingUrl;
         iframe.title = 'TidyCal Booking';
@@ -340,7 +340,7 @@ function initBookingModal() {
         if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
     });
 
-    
+    // Event delegation for all booking buttons
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('.open-booking');
         if (btn) {
@@ -352,12 +352,12 @@ function initBookingModal() {
     });
 }
 
-
+// Mobile sticky CTA is now handled by the unified scroll handler
 
 function initLayout() {
     document.title = data.meta.name + " | " + data.meta.tagline;
 
-    
+    // Inject A Better Way section
     const aBetterWayContainer = document.getElementById('a-better-way-container');
     if (aBetterWayContainer && data.a_better_way) {
         aBetterWayContainer.innerHTML = createABetterWaySection(data.a_better_way, LANG);
@@ -403,7 +403,7 @@ ${createBlueprintAccordion(data.blueprints, LANG)}`;
         }, 100);
     }
 
-    
+    // Inject Who This Is For section
     const whoThisIsForContainer = document.getElementById('who-this-is-for-container');
     if (whoThisIsForContainer && data.who_this_is_for) {
         whoThisIsForContainer.innerHTML = createWhoThisIsForSection(data.who_this_is_for, LANG);
@@ -529,7 +529,7 @@ function loadBlueprint(index) {
     animateBlueprintContent(bp);
     setTimeout(() => display.classList.add('active'), 700);
     setTimeout(() => animateHoursBars(), 100);
-    
+    // CTA focus effect is handled by delegated listeners — no re-init needed
     try {
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
@@ -543,11 +543,11 @@ function animateBlueprintContent(bp) {
     const display = document.getElementById('blueprint-display');
     const mixedChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-    
+    // Title - immediate cipher (uppercase charset)
     const title = display.querySelector('.display-title');
     if (title) scrambleText(title, bp.name.toUpperCase(), { speed: 45, charsPerTick: 1 });
 
-    
+    // Description & Timeline - cipher with stagger
     display.querySelectorAll('.display-description, .display-timeline').forEach((el, i) => {
         const text = el.textContent;
         const html = el.innerHTML;
@@ -560,7 +560,7 @@ function animateBlueprintContent(bp) {
         }, 200 + i * 150);
     });
 
-    
+    // Feature list items - cipher staggered
     display.querySelectorAll('.feature-list li').forEach((el, i) => {
         const text = el.textContent;
         el.style.opacity = '0';
@@ -571,7 +571,7 @@ function animateBlueprintContent(bp) {
         }, 400 + i * 80);
     });
 
-    
+    // Footer - price gets cipher, whole footer fades in
     const footer = display.querySelector('.display-footer');
     if (footer) {
         footer.style.opacity = '0';
@@ -593,7 +593,7 @@ function scrambleText(element, targetText, options = {}) {
     const charsPerTick = options.charsPerTick || 3;
     const restoreHTML = options.restoreHTML || null;
     let iteration = 0;
-    
+    // Immediately show scrambled text (no flash of real content)
     element.textContent = targetText.split('').map(char =>
         (char === ' ' || char === '\n') ? char : chars[Math.floor(Math.random() * chars.length)]
     ).join('');
@@ -669,7 +669,7 @@ function typeText(tabName) {
     isTyping = true;
     const highlightedText = highlightSyntax(template);
 
-    
+    // Parse the highlighted text into individual character elements inside their spans
     const container = document.createElement('div');
     container.style.display = 'inline';
     container.innerHTML = highlightedText;
@@ -677,7 +677,7 @@ function typeText(tabName) {
     const charsToType = [];
 
     function processNode(node) {
-        if (node.nodeType === 3) { 
+        if (node.nodeType === 3) { // Node.TEXT_NODE
             const text = node.nodeValue;
             const fragment = document.createDocumentFragment();
             for (let i = 0; i < text.length; i++) {
@@ -688,7 +688,7 @@ function typeText(tabName) {
                 charsToType.push(charSpan);
             }
             node.parentNode.replaceChild(fragment, node);
-        } else if (node.nodeType === 1) { 
+        } else if (node.nodeType === 1) { // Node.ELEMENT_NODE
             Array.from(node.childNodes).forEach(processNode);
         }
     }
@@ -718,7 +718,7 @@ function typeText(tabName) {
         const charSpan = charsToType[charIndex];
         charSpan.style.opacity = '1';
 
-        
+        // Humanize typing speed
         let delay = (10 + Math.random() * 15) * 0.7;
         const char = charSpan.textContent;
         if (char === ' ') delay += 7;
@@ -736,7 +736,7 @@ function typeText(tabName) {
 function highlightSyntax(text) {
     let escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-    
+    // Token color mapping
     const tokenColors = {
         'firstName': 'syntax-firstname',
         'senderName': 'syntax-sender',
@@ -744,13 +744,13 @@ function highlightSyntax(text) {
         'industry': 'syntax-industry'
     };
 
-    
+    // Helper to colorize a single token
     const colorizeToken = (match, varName) => {
         const colorClass = tokenColors[varName] || 'syntax-variable';
         return `<span class="${colorClass}">{{${varName}}}</span>`;
     };
 
-    
+    // Process RANDOM blocks - improved regex to handle nested tokens
     escaped = escaped.replace(/\{\{RANDOM\s*\|((?:[^{}]|\{\{[^}]+\}\})+)\}\}/g, (m, content) => {
         const parts = content.split('|').map(p => p.trim());
         const highlighted = parts.map((part, i) => {
@@ -760,7 +760,7 @@ function highlightSyntax(text) {
         return `<span class="syntax-random">{{RANDOM}}</span> ${highlighted}`;
     });
 
-    
+    // Process remaining standalone tokens
     return escaped.replace(/\{\{(\w+)\}\}/g, colorizeToken);
 }
 
