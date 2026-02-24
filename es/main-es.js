@@ -2,6 +2,10 @@ import { salesArchitectureData as data } from './data-es.js';
 import { createValuePropCard, createBlueprintNavItem, createBlueprintDisplay, createBlueprintAccordion, createPricingCard, createStatItem, createRoadmapItem, createFaqItem, createMarketDynamics, createSecondaryCTANote, createABetterWaySection, createWhoThisIsForSection } from '../components.js';
 
 const LANG = 'es';
+const TIDY_LINKS = {
+    discovery: 'https://tidycal.com/strategyandstack/exploracion',
+    strategy: 'https://tidycal.com/strategyandstack/estrategia'
+};
 
 const emailTemplates = {
     linkedin: `{{RANDOM | Hola {{firstName}} | {{firstName}},}} este es un mensaje en frío y sé que recibes muchos, así que seré breve.
@@ -75,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initMobileStickyCta();
     initCTAFocusEffect();
     initAnimations();
+    initBookingModal();
     try {
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
@@ -230,6 +235,84 @@ function initSectionReveals() {
         });
     }, { threshold: 0.1 });
     reveals.forEach(el => observer.observe(el));
+}
+
+function initBookingModal() {
+    const modal = document.getElementById('booking-modal');
+    const embedContainer = document.getElementById('tidycal-embed');
+    const closeBtn = document.getElementById('close-booking-modal');
+    const backdrop = modal?.querySelector('.booking-modal-backdrop');
+    const loader = modal?.querySelector('.modal-loader');
+    const modalTitle = document.getElementById('modal-title');
+    const modalSubtitle = document.getElementById('modal-subtitle');
+
+    if (!modal || !embedContainer) return;
+
+    window.openBookingModal = (code = 'GENERAL', type = 'discovery') => {
+        const baseUrl = TIDY_LINKS[type] || TIDY_LINKS.discovery;
+        const trackingUrl = `${baseUrl}?utm_source=Website&utm_medium=CTA&utm_campaign=${code}`;
+
+        // Reset loader and title
+        if (loader) loader.style.opacity = '1';
+        if (modalTitle) modalTitle.textContent = type === 'strategy' ? 'Sesión de Estrategia' : 'Sesión de Exploración';
+        if (modalSubtitle) modalSubtitle.textContent = type === 'strategy' ? '30 minutos • Sesión de Trabajo' : '15 minutos • Llamada de Alineación';
+
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        // Animate modal in
+        gsap.to(modal, { opacity: 1, duration: 0.4, ease: 'power2.out' });
+        gsap.fromTo('.booking-modal-content-wrapper',
+            { y: 30, scale: 0.98 },
+            { y: 0, scale: 1, duration: 0.5, ease: 'power2.out', delay: 0.1 }
+        );
+
+        // Load iframe
+        const iframe = document.createElement('iframe');
+        iframe.src = trackingUrl;
+        iframe.title = 'TidyCal Booking';
+        iframe.allow = 'payment';
+
+        iframe.onload = () => {
+            if (loader) {
+                gsap.to(loader, { opacity: 0, duration: 0.5, onComplete: () => loader.style.display = 'none' });
+            }
+        };
+
+        embedContainer.innerHTML = '';
+        embedContainer.appendChild(iframe);
+        if (loader) loader.style.display = 'flex';
+    };
+
+    const closeModal = () => {
+        gsap.to(modal, {
+            opacity: 0,
+            duration: 0.3,
+            onComplete: () => {
+                modal.classList.remove('active');
+                embedContainer.innerHTML = '';
+                document.body.style.overflow = '';
+            }
+        });
+    };
+
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (backdrop) backdrop.addEventListener('click', closeModal);
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
+    });
+
+    // Event delegation for all booking buttons
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.open-booking');
+        if (btn) {
+            e.preventDefault();
+            const code = btn.dataset.bookingCode || 'GENERAL';
+            const type = btn.dataset.bookingType || 'discovery';
+            window.openBookingModal(code, type);
+        }
+    });
 }
 
 function initMobileStickyCta() {

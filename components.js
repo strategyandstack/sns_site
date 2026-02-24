@@ -125,7 +125,7 @@ ${hoursHtml}
 <ul class="feature-list">${bp.deliverables.map(d => `<li>${d}</li>`).join('')}</ul>
 <div class="display-footer">
     <div class="display-price">${priceDisplay}</div>
-    <a href="https://app.apollo.io/#/meet/managed-meetings/eddie/hor-57g-ivh/start" target="_blank" rel="noopener noreferrer" class="display-cta">${l.cta}</a>
+    <button class="open-booking display-cta" data-booking-type="strategy" data-booking-code="BLUEPRINT_${bp.id.toUpperCase()}">${l.cta}</button>
 </div>`;
 };
 
@@ -167,7 +167,7 @@ export const createBlueprintAccordion = (blueprints, lang = 'en') => {
         <ul class="space-y-2 mb-4">${bp.deliverables.map(d => `<li class="flex items-start gap-2 text-xs text-white/70"><span class="text-white/55">→</span>${d}</li>`).join('')}</ul>
         <div class="flex items-center justify-between pt-4 border-t border-white/5">
             <span class="text-lg font-bold">${price}</span>
-            <a href="https://app.apollo.io/#/meet/managed-meetings/eddie/hor-57g-ivh/start" target="_blank" rel="noopener noreferrer" class="bg-white text-black px-4 py-2 rounded-md text-xs font-bold uppercase tracking-wide">${l.cta}</a>
+            <button class="open-booking bg-white text-black px-4 py-2 rounded-md text-xs font-bold uppercase tracking-wide" data-booking-type="strategy" data-booking-code="BLUEPRINT_${bp.id.toUpperCase()}">${l.cta}</button>
         </div>
     </div></div>
 </div>`;
@@ -190,7 +190,7 @@ export const createPricingCard = (pkg, lang = 'en') => {
     <div class="pricing-savings">${pkg.savings || ''}</div>
     <ul class="pricing-features">${pkg.includes.map(inc => `<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg><span>${inc}</span></li>`).join('')}</ul>
     <div class="pricing-buttons">
-        <a href="https://app.apollo.io/#/meet/managed-meetings/eddie/hor-57g-ivh/start" target="_blank" rel="noopener noreferrer" class="pricing-cta ${isPopular ? 'primary' : 'secondary'}">${l.cta}</a>
+        <button class="open-booking pricing-cta ${isPopular ? 'primary' : 'secondary'}" data-booking-type="strategy" data-booking-code="PACKAGE_${pkg.id.toUpperCase()}">${l.cta}</button>
     </div>
 </div>`;
 };
