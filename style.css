@@ -184,7 +184,6 @@ nav.scrolled .glass-card {
 
 /* Language Toggle */
 .lang-toggle {
-    display: flex;
     align-items: center;
     gap: 4px;
     padding: 4px 8px;
