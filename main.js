@@ -58,12 +58,17 @@ let isTyping = false;
 let ctaHoverTimeout = null;
 let blurOverlay = null;
 
-// === Idle scheduler with Safari fallback ===
-function scheduleIdle(fn) {
+// === Scheduling helpers ===
+// Yields one paint frame then executes — for content the user will see soon.
+function afterPaint(fn) {
+    requestAnimationFrame(() => setTimeout(fn, 0));
+}
+// For truly optional cosmetic features — uses idle time or falls back to 200ms delay.
+function whenIdle(fn) {
     if ('requestIdleCallback' in window) {
-        requestIdleCallback(fn, { timeout: 2000 });
+        requestIdleCallback(fn, { timeout: 3000 });
     } else {
-        setTimeout(fn, 50);
+        setTimeout(fn, 200);
     }
 }
 
@@ -86,28 +91,23 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn('Lucide icons failed to load:', e);
     }
 
-    // --- Deferred: below-fold layout + non-critical features ---
-    scheduleIdle(() => {
+    // --- After first paint: populate below-fold content ---
+    afterPaint(() => {
         initLayoutDeferred();
+        initBlueprintInteraction();
+        initBlueprintAccordion();
+        initEmailEditor();
+        initRoadmapAnimation();
+        initFaqAnimations();
+        initStatsCounter();
         // Re-create icons for newly injected below-fold content
         try { if (typeof lucide !== 'undefined') lucide.createIcons(); } catch (e) { }
     });
 
-    scheduleIdle(() => {
+    // --- Truly cosmetic — only when idle ---
+    whenIdle(() => {
         initMouseGlow();
-        initEmailEditor();
-    });
-
-    scheduleIdle(() => {
-        initBlueprintInteraction();
-        initBlueprintAccordion();
         initCTAFocusEffect();
-    });
-
-    scheduleIdle(() => {
-        initRoadmapAnimation();
-        initFaqAnimations();
-        initStatsCounter();
     });
 });
 
