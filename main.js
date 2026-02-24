@@ -100,12 +100,26 @@ function initMouseGlow() {
     glow.className = 'mouse-glow';
     document.body.appendChild(glow);
     let mouseX = 0, mouseY = 0, glowX = 0, glowY = 0;
-    document.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; });
+    let isMoving = false;
+
+    document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        isMoving = true;
+    }, { passive: true });
+
     function animate() {
-        glowX += (mouseX - glowX) * 0.1;
-        glowY += (mouseY - glowY) * 0.1;
-        glow.style.left = glowX + 'px';
-        glow.style.top = glowY + 'px';
+        if (isMoving) {
+            glowX += (mouseX - glowX) * 0.1;
+            glowY += (mouseY - glowY) * 0.1;
+            glow.style.left = glowX + 'px';
+            glow.style.top = glowY + 'px';
+
+            // Stop animating if we are very close to the target
+            if (Math.abs(mouseX - glowX) < 0.1 && Math.abs(mouseY - glowY) < 0.1) {
+                isMoving = false;
+            }
+        }
         requestAnimationFrame(animate);
     }
     animate();
@@ -167,27 +181,34 @@ function initEditorScrollEffect() {
     const heroSection = editor.closest('section');
     if (!heroSection) return;
 
+    let ticking = false;
+
     window.addEventListener('scroll', () => {
-        const scrollY = window.scrollY;
-        const heroBottom = heroSection.offsetTop + heroSection.offsetHeight;
-        const statsTop = statsSection.offsetTop;
+        if (!ticking) {
+            window.requestAnimationFrame(() => {
+                const scrollY = window.scrollY;
+                const statsTop = statsSection.offsetTop;
 
-        const scrollStart = 100;
-        const scrollEnd = statsTop - 100;
-        const progress = Math.max(0, Math.min(1, (scrollY - scrollStart) / (scrollEnd - scrollStart)));
+                const scrollStart = 100;
+                const scrollEnd = statsTop - 100;
+                const progress = Math.max(0, Math.min(1, (scrollY - scrollStart) / (scrollEnd - scrollStart)));
 
-        if (scrollY < scrollStart) {
-            editor.style.transform = 'perspective(1000px) rotateX(0deg) scale(1)';
-            editor.style.opacity = '1';
-        } else if (progress < 1) {
-            const scale = 1 + (progress * 0.15);
-            const rotateX = progress * -8;
-            const translateY = progress * -30;
+                if (scrollY < scrollStart) {
+                    editor.style.transform = 'perspective(1000px) rotateX(0deg) scale(1)';
+                    editor.style.opacity = '1';
+                } else if (progress < 1) {
+                    const scale = 1 + (progress * 0.15);
+                    const rotateX = progress * -8;
+                    const translateY = progress * -30;
 
-            editor.style.transform = `perspective(1000px) rotateX(${rotateX}deg) scale(${scale}) translateY(${translateY}px)`;
-            editor.style.opacity = Math.max(0, 1 - (progress * 1.2));
-        } else {
-            editor.style.opacity = '0';
+                    editor.style.transform = `perspective(1000px) rotateX(${rotateX}deg) scale(${scale}) translateY(${translateY}px)`;
+                    editor.style.opacity = Math.max(0, 1 - (progress * 1.2));
+                } else {
+                    editor.style.opacity = '0';
+                }
+                ticking = false;
+            });
+            ticking = true;
         }
     }, { passive: true });
 }

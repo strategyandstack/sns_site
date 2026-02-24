@@ -27,6 +27,37 @@ body {
     color: #fff;
     overflow-x: hidden;
     line-height: 1.5;
+    font-display: swap;
+}
+
+/* Skeleton Loading & CLS Reservoirs */
+#blueprints-container {
+    min-height: 600px;
+    position: relative;
+    background: rgba(255, 255, 255, 0.01);
+    border-radius: 14px;
+}
+
+#a-better-way-container {
+    min-height: 480px;
+}
+
+#who-this-is-for-container {
+    min-height: 380px;
+}
+
+#pricing-grid {
+    min-height: 500px;
+}
+
+.blueprint-dashboard {
+    min-height: 480px;
+}
+
+@media (max-width: 1024px) {
+    #blueprints-container {
+        min-height: auto;
+    }
 }
 
 /* Page blur overlay for CTA focus effect */
