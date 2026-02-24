@@ -62,22 +62,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!data) return;
     initBlurOverlay();
     initMouseGlow();
-    initScrollProgress();
     initLayout();
-    initNavScroll();
     initActiveNavHighlight();
     initSmoothScroll();
     initEmailEditor();
-    initEditorScrollEffect();
     initBlueprintInteraction();
     initBlueprintAccordion();
     initSectionReveals();
     initRoadmapAnimation();
     initFaqAnimations();
     initStatsCounter();
-    initMobileStickyCta();
     initCTAFocusEffect();
     initBookingModal();
+    initUnifiedScrollHandler();
     try {
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
@@ -98,47 +95,106 @@ function initMouseGlow() {
     glow.className = 'mouse-glow';
     document.body.appendChild(glow);
     let mouseX = 0, mouseY = 0, glowX = 0, glowY = 0;
-    let isMoving = false;
+    let animating = false;
+
+    function animate() {
+        glowX += (mouseX - glowX) * 0.1;
+        glowY += (mouseY - glowY) * 0.1;
+        glow.style.transform = `translate3d(${glowX}px, ${glowY}px, 0) translate(-50%, -50%)`;
+
+        // Stop the loop once we've converged
+        if (Math.abs(mouseX - glowX) < 0.5 && Math.abs(mouseY - glowY) < 0.5) {
+            animating = false;
+            return;
+        }
+        requestAnimationFrame(animate);
+    }
 
     document.addEventListener('mousemove', (e) => {
         mouseX = e.clientX;
         mouseY = e.clientY;
-        isMoving = true;
-    }, { passive: true });
-
-    function animate() {
-        if (isMoving) {
-            glowX += (mouseX - glowX) * 0.1;
-            glowY += (mouseY - glowY) * 0.1;
-            // Use transform instead of left/top to avoid layout triggers (TBT & INP improvements)
-            glow.style.transform = `translate3d(${glowX}px, ${glowY}px, 0) translate(-50%, -50%)`;
-
-            // Stop animating if we are very close to the target
-            if (Math.abs(mouseX - glowX) < 0.1 && Math.abs(mouseY - glowY) < 0.1) {
-                isMoving = false;
-            }
+        // Restart the animation loop only if it isn't already running
+        if (!animating) {
+            animating = true;
+            requestAnimationFrame(animate);
         }
-        requestAnimationFrame(animate);
-    }
-    animate();
+    }, { passive: true });
 }
 
-function initScrollProgress() {
+// === Unified Scroll Handler ===
+// All scroll-dependent logic is consolidated here to avoid multiple listeners.
+function initUnifiedScrollHandler() {
+    const callbacks = [];
+
+    // 1. Scroll progress bar
     const progress = document.createElement('div');
     progress.className = 'scroll-progress';
     document.body.appendChild(progress);
-    window.addEventListener('scroll', () => {
+    callbacks.push(() => {
         const scrollTop = window.scrollY;
         const docHeight = document.documentElement.scrollHeight - window.innerHeight;
         progress.style.transform = `scaleX(${scrollTop / docHeight})`;
-    }, { passive: true });
-}
+    });
 
-function initNavScroll() {
+    // 2. Nav scroll state
     const nav = document.querySelector('nav');
-    if (!nav) return;
+    if (nav) {
+        callbacks.push(() => {
+            nav.classList.toggle('scrolled', window.scrollY > 50);
+        });
+    }
+
+    // 3. Editor parallax scroll effect
+    const editor = document.querySelector('.email-editor-container');
+    const statsSection = document.getElementById('stats-section');
+    if (editor && statsSection && editor.closest('section')) {
+        callbacks.push(() => {
+            const scrollY = window.scrollY;
+            const statsTop = statsSection.offsetTop;
+            const scrollStart = 100;
+            const scrollEnd = statsTop - 100;
+            const p = Math.max(0, Math.min(1, (scrollY - scrollStart) / (scrollEnd - scrollStart)));
+
+            if (scrollY < scrollStart) {
+                editor.style.transform = 'perspective(1000px) rotateX(0deg) scale(1)';
+                editor.style.opacity = '1';
+            } else if (p < 1) {
+                const scale = 1 + (p * 0.15);
+                const rotateX = p * -8;
+                const translateY = p * -30;
+                editor.style.transform = `perspective(1000px) rotateX(${rotateX}deg) scale(${scale}) translateY(${translateY}px)`;
+                editor.style.opacity = Math.max(0, 1 - (p * 1.2));
+            } else {
+                editor.style.opacity = '0';
+            }
+        });
+    }
+
+    // 4. Clear CTA focus effects on scroll
+    callbacks.push(clearAllFocusEffects);
+
+    // 5. Mobile sticky CTA
+    const sticky = document.querySelector('.mobile-sticky-cta');
+    const hero = document.querySelector('.hero-content');
+    const footer = document.querySelector('footer');
+    if (sticky && hero) {
+        callbacks.push(() => {
+            const heroBottom = hero.getBoundingClientRect().bottom;
+            const footerTop = footer ? footer.getBoundingClientRect().top : Infinity;
+            sticky.classList.toggle('visible', heroBottom < 0 && footerTop > window.innerHeight);
+        });
+    }
+
+    // Single listener, single RAF gate
+    let ticking = false;
     window.addEventListener('scroll', () => {
-        nav.classList.toggle('scrolled', window.scrollY > 50);
+        if (!ticking) {
+            requestAnimationFrame(() => {
+                for (let i = 0; i < callbacks.length; i++) callbacks[i]();
+                ticking = false;
+            });
+            ticking = true;
+        }
     }, { passive: true });
 }
 
@@ -171,45 +227,7 @@ function initSmoothScroll() {
     });
 }
 
-function initEditorScrollEffect() {
-    const editor = document.querySelector('.email-editor-container');
-    const statsSection = document.getElementById('stats-section');
-    if (!editor || !statsSection) return;
-
-    const heroSection = editor.closest('section');
-    if (!heroSection) return;
-
-    let ticking = false;
-
-    window.addEventListener('scroll', () => {
-        if (!ticking) {
-            window.requestAnimationFrame(() => {
-                const scrollY = window.scrollY;
-                const statsTop = statsSection.offsetTop;
-
-                const scrollStart = 100;
-                const scrollEnd = statsTop - 100;
-                const progress = Math.max(0, Math.min(1, (scrollY - scrollStart) / (scrollEnd - scrollStart)));
-
-                if (scrollY < scrollStart) {
-                    editor.style.transform = 'perspective(1000px) rotateX(0deg) scale(1)';
-                    editor.style.opacity = '1';
-                } else if (progress < 1) {
-                    const scale = 1 + (progress * 0.15);
-                    const rotateX = progress * -8;
-                    const translateY = progress * -30;
-
-                    editor.style.transform = `perspective(1000px) rotateX(${rotateX}deg) scale(${scale}) translateY(${translateY}px)`;
-                    editor.style.opacity = Math.max(0, 1 - (progress * 1.2));
-                } else {
-                    editor.style.opacity = '0';
-                }
-                ticking = false;
-            });
-            ticking = true;
-        }
-    }, { passive: true });
-}
+// Editor scroll effect is now handled by the unified scroll handler
 
 function clearAllFocusEffects() {
     if (ctaHoverTimeout) { clearTimeout(ctaHoverTimeout); ctaHoverTimeout = null; }
@@ -240,9 +258,7 @@ function initCTAFocusEffect() {
         if (!cta) return;
         clearAllFocusEffects();
     }, true);
-
-    // Also clear on scroll to prevent stuck blur state
-    window.addEventListener('scroll', clearAllFocusEffects, { passive: true });
+    // CTA focus clear on scroll is now handled by the unified scroll handler
 }
 
 function initSectionReveals() {
@@ -336,17 +352,7 @@ function initBookingModal() {
     });
 }
 
-function initMobileStickyCta() {
-    const sticky = document.querySelector('.mobile-sticky-cta');
-    const hero = document.querySelector('.hero-content');
-    const footer = document.querySelector('footer');
-    if (!sticky || !hero) return;
-    window.addEventListener('scroll', () => {
-        const heroBottom = hero.getBoundingClientRect().bottom;
-        const footerTop = footer ? footer.getBoundingClientRect().top : Infinity;
-        sticky.classList.toggle('visible', heroBottom < 0 && footerTop > window.innerHeight);
-    }, { passive: true });
-}
+// Mobile sticky CTA is now handled by the unified scroll handler
 
 function initLayout() {
     document.title = data.meta.name + " | " + data.meta.tagline;
