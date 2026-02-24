@@ -539,7 +539,7 @@ function animateBlueprintContent(bp) {
 
     // Title - immediate cipher (uppercase charset)
     const title = display.querySelector('.display-title');
-    if (title) scrambleText(title, bp.name.toUpperCase(), { speed: 25, charsPerTick: 3 });
+    if (title) scrambleText(title, bp.name.toUpperCase(), { speed: 45, charsPerTick: 1 });
 
     // Description & Timeline - cipher with stagger
     display.querySelectorAll('.display-description, .display-timeline').forEach((el, i) => {
