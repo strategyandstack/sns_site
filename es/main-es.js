@@ -58,23 +58,26 @@ let isTyping = false;
 let ctaHoverTimeout = null;
 let blurOverlay = null;
 
+// === Idle scheduler with Safari fallback ===
+function scheduleIdle(fn) {
+    if ('requestIdleCallback' in window) {
+        requestIdleCallback(fn, { timeout: 2000 });
+    } else {
+        setTimeout(fn, 50);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     if (!data) return;
+
+    // --- Critical path (sync) ---
     initBlurOverlay();
-    initMouseGlow();
-    initLayout();
-    initActiveNavHighlight();
-    initSmoothScroll();
-    initEmailEditor();
-    initBlueprintInteraction();
-    initBlueprintAccordion();
-    initSectionReveals();
-    initRoadmapAnimation();
-    initFaqAnimations();
-    initStatsCounter();
-    initCTAFocusEffect();
+    initLayoutCritical();
     initBookingModal();
+    initSmoothScroll();
     initUnifiedScrollHandler();
+    initActiveNavHighlight();
+    initSectionReveals();
     try {
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
@@ -82,6 +85,30 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
         console.warn('Lucide icons failed to load:', e);
     }
+
+    // --- Deferred: below-fold layout + non-critical features ---
+    scheduleIdle(() => {
+        initLayoutDeferred();
+        // Re-create icons for newly injected below-fold content
+        try { if (typeof lucide !== 'undefined') lucide.createIcons(); } catch (e) { }
+    });
+
+    scheduleIdle(() => {
+        initMouseGlow();
+        initEmailEditor();
+    });
+
+    scheduleIdle(() => {
+        initBlueprintInteraction();
+        initBlueprintAccordion();
+        initCTAFocusEffect();
+    });
+
+    scheduleIdle(() => {
+        initRoadmapAnimation();
+        initFaqAnimations();
+        initStatsCounter();
+    });
 });
 
 function initBlurOverlay() {
@@ -354,9 +381,21 @@ function initBookingModal() {
 
 // Mobile sticky CTA is now handled by the unified scroll handler
 
-function initLayout() {
+// === Layout: Critical above-fold content (sync) ===
+function initLayoutCritical() {
     document.title = data.meta.name + " | " + data.meta.tagline;
 
+    const statsGrid = document.getElementById('stats-grid');
+    if (statsGrid) statsGrid.innerHTML = data.social_proof.stats.map(s => createStatItem(s)).join('');
+
+    const footerTagline = document.getElementById('footer-tagline');
+    const footerPowered = document.getElementById('footer-powered');
+    if (footerTagline) footerTagline.textContent = data.footer.tagline;
+    if (footerPowered) footerPowered.textContent = data.footer.powered_by;
+}
+
+// === Layout: Below-fold content (deferred via idle callback) ===
+function initLayoutDeferred() {
     // Inject Una Mejor Manera section
     const aBetterWayContainer = document.getElementById('a-better-way-container');
     if (aBetterWayContainer && data.a_better_way) {
@@ -384,9 +423,6 @@ function initLayout() {
     if (mList) {
         mList.innerHTML = createMarketDynamics(data.guarantee.what_depends_on_market, LANG);
     }
-
-    const statsGrid = document.getElementById('stats-grid');
-    if (statsGrid) statsGrid.innerHTML = data.social_proof.stats.map(s => createStatItem(s)).join('');
 
     const bpContainer = document.getElementById('blueprints-container');
     if (bpContainer) {
@@ -439,11 +475,6 @@ ${createBlueprintAccordion(data.blueprints, LANG)}`;
         const noteHtml = createSecondaryCTANote(data.cta_sections.secondary.note_text, data.cta_sections.secondary.scarcity_text);
         ctaSecondaryCard.insertAdjacentHTML('beforeend', noteHtml);
     }
-
-    const footerTagline = document.getElementById('footer-tagline');
-    const footerPowered = document.getElementById('footer-powered');
-    if (footerTagline) footerTagline.textContent = data.footer.tagline;
-    if (footerPowered) footerPowered.textContent = data.footer.powered_by;
 }
 
 function animateHoursBars() {

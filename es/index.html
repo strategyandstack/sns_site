@@ -56,8 +56,37 @@
     <meta name="theme-color" content="#A855F7">
     <meta name="msapplication-TileColor" content="#A855F7">
 
+    <link rel="preload" href="../fonts/inter-41.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high">
     <link rel="preload" href="../fonts/inter-6.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="../fonts/inter-41.woff2" as="font" type="font/woff2" crossorigin>
+    <style>
+        /* Critical hero CSS – inlined for LCP */
+        #hero-headline {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-weight: 900;
+            font-size: 2.25rem;
+            line-height: .95;
+            letter-spacing: -.05em;
+            color: #fff;
+            opacity: 1
+        }
+
+        @media(min-width:768px) {
+            #hero-headline {
+                font-size: 3rem
+            }
+        }
+
+        @media(min-width:1024px) {
+            #hero-headline {
+                font-size: 3.5rem
+            }
+        }
+
+        .hero-content p,
+        .hero-content .flex {
+            opacity: 1
+        }
+    </style>
     <link rel="preconnect" href="https://tidycal.com">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
     <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js" defer></script>
