@@ -7,8 +7,8 @@ Location: Global
 Powered by: LinkedIn Success Formula + AuthGen + RocketsTraffic + Evil Genius Corp
 
 /* SITE */
-Last update: 2026-01-14
+Last update: 2026-02-24
 Language: English, Spanish
 Standards: HTML5, CSS3, ES6+
-Components: Tailwind CSS, GSAP, Lucide Icons
-Fonts: SF Pro Display
+Components: GSAP, Lucide Icons
+Fonts: Inter
