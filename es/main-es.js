@@ -480,7 +480,9 @@ ${createBlueprintAccordion(data.blueprints, LANG)}`;
 
 function animateHoursBars() {
     document.querySelectorAll('.hours-bar[data-width]').forEach(bar => {
-        setTimeout(() => { bar.style.width = bar.dataset.width; }, 100);
+        const pct = parseFloat(bar.dataset.width) / 100;
+        bar.style.transform = `scaleX(0)`;
+        setTimeout(() => { bar.style.transform = `scaleX(${pct})`; }, 100);
     });
 }
 
