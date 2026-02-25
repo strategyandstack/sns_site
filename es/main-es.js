@@ -105,8 +105,8 @@ document.addEventListener('DOMContentLoaded', () => {
         try { if (typeof lucide !== 'undefined') lucide.createIcons(); } catch (e) { }
     });
 
-    // --- Truly cosmetic — only when idle ---
-    whenIdle(() => {
+    // --- After first paint: cosmetic ---
+    afterPaint(() => {
         initMouseGlow();
         initCTAFocusEffect();
     });
@@ -265,27 +265,31 @@ function clearAllFocusEffects() {
 }
 
 function initCTAFocusEffect() {
-    // Use event delegation on the document to avoid stacking duplicate listeners
-    // when loadBlueprint re-renders the display panel.
-    document.addEventListener('mouseenter', (e) => {
-        if (!e.target || typeof e.target.closest !== 'function') return;
+    // Use mouseover/mouseout with relatedTarget checks to avoid flicker
+    // from capture-phase mouseenter/mouseleave firing on every child element.
+    let activeCTA = null;
+
+    document.addEventListener('mouseover', (e) => {
         const cta = e.target.closest('.btn-primary, .btn-secondary, .display-cta, .pricing-cta');
-        if (!cta) return;
+        if (!cta || cta === activeCTA) return;
         clearAllFocusEffects();
+        activeCTA = cta;
         ctaHoverTimeout = setTimeout(() => {
             blurOverlay.classList.add('active');
             cta.classList.add('cta-focus');
             const parentCard = cta.closest('.glass-card, .pricing-card, .blueprint-display');
             if (parentCard) parentCard.classList.add('card-elevated');
         }, 300);
-    }, true);
+    });
 
-    document.addEventListener('mouseleave', (e) => {
-        if (!e.target || typeof e.target.closest !== 'function') return;
+    document.addEventListener('mouseout', (e) => {
         const cta = e.target.closest('.btn-primary, .btn-secondary, .display-cta, .pricing-cta');
         if (!cta) return;
+        // Only clear if we are truly leaving the CTA (not moving to a child)
+        if (cta.contains(e.relatedTarget)) return;
+        activeCTA = null;
         clearAllFocusEffects();
-    }, true);
+    });
     // CTA focus clear on scroll is now handled by the unified scroll handler
 }
 
@@ -734,6 +738,7 @@ function typeText(tabName) {
 
     const cursor = document.createElement('span');
     cursor.className = 'typing-cursor';
+    cursor.style.opacity = '0';
     textElement.appendChild(cursor);
 
     let charIndex = 0;
@@ -749,6 +754,8 @@ function typeText(tabName) {
             return;
         }
 
+        // Make cursor visible once typing starts
+        if (cursor.style.opacity === '0') cursor.style.opacity = '1';
         const charSpan = charsToType[charIndex];
         charSpan.style.opacity = '1';
 
