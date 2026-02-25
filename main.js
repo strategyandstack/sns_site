@@ -297,7 +297,12 @@ function initCTAFocusEffect() {
         clearAllFocusEffects();
         activeCTA = cta;
         ctaHoverTimeout = setTimeout(() => {
-            blurOverlay.classList.add('active');
+            // Skip blur overlay for blueprint CTAs — sticky positioning
+            // creates a stacking context that can't escape above the fixed overlay
+            const isBlueprint = cta.closest('.blueprint-display, .blueprint-dashboard');
+            if (!isBlueprint) {
+                blurOverlay.classList.add('active');
+            }
             cta.classList.add('cta-focus');
             const parentCard = cta.closest('.glass-card, .pricing-card, .blueprint-display');
             if (parentCard) parentCard.classList.add('card-elevated');
