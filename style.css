@@ -1563,9 +1563,13 @@ h4 {
 }
 
 .glass-card.card-elevated,
-.pricing-card.card-elevated,
-.blueprint-display.card-elevated {
+.pricing-card.card-elevated {
     position: relative;
+    z-index: 60
+}
+
+.blueprint-display.card-elevated {
+    position: sticky;
     z-index: 60
 }
 

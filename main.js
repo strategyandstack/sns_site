@@ -226,11 +226,15 @@ function initUnifiedScrollHandler() {
     }, { passive: true });
 }
 
+let navObserver = null;
+let navSections = null;
+let navLinks = null;
+
 function initActiveNavHighlight() {
-    const sections = document.querySelectorAll('section[id]');
-    const navLinks = document.querySelectorAll('.nav-link');
-    if (!sections.length || !navLinks.length) return;
-    const observer = new IntersectionObserver((entries) => {
+    navSections = document.querySelectorAll('section[id]');
+    navLinks = document.querySelectorAll('.nav-link');
+    if (!navSections.length || !navLinks.length) return;
+    navObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const id = entry.target.id;
@@ -238,7 +242,7 @@ function initActiveNavHighlight() {
             }
         });
     }, { threshold: 0.3 });
-    sections.forEach(section => observer.observe(section));
+    navSections.forEach(section => navObserver.observe(section));
 }
 
 function initSmoothScroll() {
@@ -249,7 +253,25 @@ function initSmoothScroll() {
             const target = document.querySelector(href);
             if (target) {
                 e.preventDefault();
+
+                // Immediately set correct nav highlight
+                if (navLinks) {
+                    navLinks.forEach(link => link.classList.toggle('active', link.getAttribute('href') === href));
+                }
+
+                // Disconnect observer during scroll to prevent intermediate sections from triggering
+                if (navObserver && navSections) {
+                    navObserver.disconnect();
+                }
+
                 target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                // Re-observe after scroll finishes (~600ms for smooth scroll)
+                setTimeout(() => {
+                    if (navObserver && navSections) {
+                        navSections.forEach(section => navObserver.observe(section));
+                    }
+                }, 800);
             }
         });
     });
