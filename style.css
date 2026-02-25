@@ -1378,7 +1378,7 @@ body {
     border-radius: 50%;
     background: radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, transparent 70%);
     pointer-events: none;
-    z-index: 1;
+    z-index: 45;
     transform: translate(-50%, -50%);
     opacity: 0;
     will-change: transform
@@ -1562,9 +1562,8 @@ h4 {
 .pricing-cta.cta-focus {
     position: relative;
     z-index: 60;
-    transform: scale(1.05) translateY(-3px);
     box-shadow: 0 25px 60px -10px rgba(168, 85, 247, 0.5);
-    transition: all 2s cubic-bezier(0.16, 1, 0.3, 1)
+    transition: box-shadow 2s cubic-bezier(0.16, 1, 0.3, 1)
 }
 
 .glass-card.card-elevated,
@@ -2829,12 +2828,7 @@ details:focus-visible {
     }
 }
 
-#blueprints,
-#pricing,
-#faq {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 800px
-}
+
 
 footer {
     content-visibility: auto;

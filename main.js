@@ -738,7 +738,7 @@ function typeText(tabName) {
 
     const cursor = document.createElement('span');
     cursor.className = 'typing-cursor';
-    cursor.style.opacity = '0';
+    cursor.style.visibility = 'hidden';
     textElement.appendChild(cursor);
 
     let charIndex = 0;
@@ -755,7 +755,7 @@ function typeText(tabName) {
         }
 
         // Make cursor visible once typing starts
-        if (cursor.style.opacity === '0') cursor.style.opacity = '1';
+        if (cursor.style.visibility === 'hidden') cursor.style.visibility = 'visible';
         const charSpan = charsToType[charIndex];
         charSpan.style.opacity = '1';
 

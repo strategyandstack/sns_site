@@ -202,8 +202,8 @@ export const createStatItem = (stat) => `
 </div>`;
 
 export const createRoadmapItem = (step, idx) => `
-<div class="roadmap-item flex items-start md:items-center gap-5 group" data-index="${idx}">
-    <div class="roadmap-number flex-shrink-0 w-12 h-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-black text-white text-base">${idx + 1}</div>
+<div class="roadmap-item flex items-start md:items-center gap-5 group max-w-3xl mx-auto" data-index="${idx}">
+    <div class="roadmap-number flex-shrink-0 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-black text-white text-lg" style="width:56px;height:56px;min-width:56px">${idx + 1}</div>
     <div class="flex-grow glass-card p-5 md:p-6 rounded-xl border-white/5 group-hover:border-white/15 transition-all duration-500"><p class="text-sm font-bold tracking-tight">${step}</p></div>
 </div>`;
 
