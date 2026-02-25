@@ -1,5 +1,5 @@
-import { salesArchitectureData as data } from './data-es.js';
-import { createValuePropCard, createBlueprintNavItem, createBlueprintDisplay, createBlueprintAccordion, createPricingCard, createStatItem, createRoadmapItem, createFaqItem, createMarketDynamics, createSecondaryCTANote, createABetterWaySection, createWhoThisIsForSection } from '../components.js';
+import { salesArchitectureData as data } from './data-es.js?v=2';
+import { createValuePropCard, createBlueprintNavItem, createBlueprintDisplay, createBlueprintAccordion, createPricingCard, createStatItem, createRoadmapItem, createFaqItem, createMarketDynamics, createSecondaryCTANote, createABetterWaySection, createWhoThisIsForSection } from '../components.js?v=2';
 
 const LANG = 'es';
 const TIDY_LINKS = {
