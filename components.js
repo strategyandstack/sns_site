@@ -1,6 +1,6 @@
 export const createValuePropCard = (title, description, icon) => `
 <div class="glass-card p-6 rounded-xl border-white/10 group hover:border-white/20 transition-all duration-500 section-reveal">
-    <div class="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center mb-5 border border-white/10 group-hover:scale-110 transition-transform">
+    <div style="width:40px;height:40px;min-width:40px" class="bg-white/5 rounded-lg flex items-center justify-center mb-5 border border-white/10 group-hover:scale-110 transition-transform">
         <i data-lucide="${icon}" class="w-5 h-5 text-white"></i>
     </div>
     <h3 class="text-lg font-bold mb-2 tracking-tight">${title}</h3>
@@ -76,7 +76,7 @@ export const createWhoThisIsForSection = (data, lang = 'en') => {
             <div class="space-y-4 section-reveal">
                 ${data.criteria.map(item => `
                 <div class="who-criteria-item glass-card p-5 rounded-xl border-white/10 flex items-start gap-4 group hover:border-white/20 transition-all">
-                    <div class="w-10 h-10 bg-purple-500/10 rounded-lg flex items-center justify-center flex-shrink-0 border border-purple-500/20 group-hover:scale-110 transition-transform">
+                    <div style="width:40px;height:40px;min-width:40px" class="bg-purple-500/10 rounded-lg flex items-center justify-center flex-shrink-0 border border-purple-500/20 group-hover:scale-110 transition-transform">
                         <i data-lucide="${item.icon}" class="w-5 h-5 text-purple-400"></i>
                     </div>
                     <div>
@@ -202,8 +202,8 @@ export const createStatItem = (stat) => `
 </div>`;
 
 export const createRoadmapItem = (step, idx) => `
-<div class="roadmap-item flex items-start md:items-center gap-5 group max-w-3xl mx-auto" data-index="${idx}">
-    <div class="roadmap-number flex-shrink-0 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-black text-white text-lg" style="width:56px;height:56px;min-width:56px">${idx + 1}</div>
+<div class="roadmap-item flex items-start md:items-center gap-5 group w-full max-w-3xl mx-auto" data-index="${idx}">
+    <div class="roadmap-number flex-shrink-0 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-black text-white text-base" style="width:48px;height:48px;min-width:48px">${idx + 1}</div>
     <div class="flex-grow glass-card p-5 md:p-6 rounded-xl border-white/5 group-hover:border-white/15 transition-all duration-500"><p class="text-sm font-bold tracking-tight">${step}</p></div>
 </div>`;
 

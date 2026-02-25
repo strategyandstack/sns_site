@@ -1380,12 +1380,8 @@ body {
     pointer-events: none;
     z-index: 45;
     transform: translate(-50%, -50%);
-    opacity: 0;
+    opacity: 1;
     will-change: transform
-}
-
-body:hover .mouse-glow {
-    opacity: 1
 }
 
 .mesh-container {
@@ -2749,7 +2745,12 @@ details:focus-visible {
         height: 100%;
         max-height: 100vh;
         border-radius: 0;
-        border: none
+        border: none;
+        padding-top: env(safe-area-inset-top, 0px)
+    }
+
+    .booking-modal-close {
+        top: calc(15px + env(safe-area-inset-top, 0px))
     }
 
     .booking-modal-body {
