@@ -193,6 +193,7 @@ function initUnifiedScrollHandler() {
 
 let navSections = null;
 let navLinks = null;
+let navClickLock = false;
 
 function initActiveNavHighlight() {
     navSections = document.querySelectorAll('section[id]');
@@ -204,11 +205,30 @@ function initActiveNavHighlight() {
     const OFFSET = 100;
 
     function updateActiveLink() {
+        // Skip scroll-spy while a nav click is animating
+        if (navClickLock) return;
+
+        // Check if user is near the bottom of the page
+        const scrollBottom = window.scrollY + window.innerHeight;
+        const docHeight = document.documentElement.scrollHeight;
+        const atBottom = (docHeight - scrollBottom) < 50;
+
         let currentId = '';
-        navSections.forEach(section => {
-            const top = section.getBoundingClientRect().top;
-            if (top <= OFFSET) currentId = section.id;
-        });
+        if (atBottom && navSections.length) {
+            // At bottom: activate the last navigable section
+            for (let i = navSections.length - 1; i >= 0; i--) {
+                const id = navSections[i].id;
+                // Only pick sections that have a matching nav link
+                const hasLink = Array.from(navLinks).some(l => l.getAttribute('href') === `#${id}`);
+                if (hasLink) { currentId = id; break; }
+            }
+        } else {
+            navSections.forEach(section => {
+                const top = section.getBoundingClientRect().top;
+                if (top <= OFFSET) currentId = section.id;
+            });
+        }
+
         navLinks.forEach(link =>
             link.classList.toggle('active', link.getAttribute('href') === `#${currentId}`)
         );
@@ -235,11 +255,17 @@ function initSmoothScroll() {
             if (target) {
                 e.preventDefault();
 
+                // Lock scroll-spy so it doesn't override the click highlight
+                navClickLock = true;
+
                 if (navLinks) {
                     navLinks.forEach(link => link.classList.toggle('active', link.getAttribute('href') === href));
                 }
 
                 target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                // Release lock after scroll animation finishes
+                setTimeout(() => { navClickLock = false; }, 800);
             }
         });
     });
