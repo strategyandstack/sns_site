@@ -191,7 +191,6 @@ function initUnifiedScrollHandler() {
     }, { passive: true });
 }
 
-let navObserver = null;
 let navSections = null;
 let navLinks = null;
 
@@ -199,15 +198,32 @@ function initActiveNavHighlight() {
     navSections = document.querySelectorAll('section[id]');
     navLinks = document.querySelectorAll('.nav-link');
     if (!navSections.length || !navLinks.length) return;
-    navObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const id = entry.target.id;
-                navLinks.forEach(link => link.classList.toggle('active', link.getAttribute('href') === `#${id}`));
-            }
+
+    // Offset = navbar height + a small buffer so the highlight
+    // flips right as the section clears the sticky nav.
+    const OFFSET = 100;
+
+    function updateActiveLink() {
+        let currentId = '';
+        navSections.forEach(section => {
+            const top = section.getBoundingClientRect().top;
+            if (top <= OFFSET) currentId = section.id;
         });
-    }, { threshold: 0.3 });
-    navSections.forEach(section => navObserver.observe(section));
+        navLinks.forEach(link =>
+            link.classList.toggle('active', link.getAttribute('href') === `#${currentId}`)
+        );
+    }
+
+    // Throttle to ~60 fps via rAF
+    let ticking = false;
+    document.addEventListener('scroll', () => {
+        if (!ticking) {
+            ticking = true;
+            requestAnimationFrame(() => { updateActiveLink(); ticking = false; });
+        }
+    }, { passive: true });
+
+    updateActiveLink();
 }
 
 function initSmoothScroll() {
@@ -223,17 +239,7 @@ function initSmoothScroll() {
                     navLinks.forEach(link => link.classList.toggle('active', link.getAttribute('href') === href));
                 }
 
-                if (navObserver && navSections) {
-                    navObserver.disconnect();
-                }
-
                 target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-                setTimeout(() => {
-                    if (navObserver && navSections) {
-                        navSections.forEach(section => navObserver.observe(section));
-                    }
-                }, 800);
             }
         });
     });
