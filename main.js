@@ -1,56 +1,11 @@
-import { salesArchitectureData as data } from './data.js?v=3';
-import { createValuePropCard, createBlueprintNavItem, createBlueprintDisplay, createBlueprintAccordion, createPricingCard, createStatItem, createRoadmapItem, createFaqItem, createMarketDynamics, createSecondaryCTANote, createABetterWaySection, createWhoThisIsForSection } from './components.js?v=3';
+import { createValuePropCard, createBlueprintNavItem, createBlueprintDisplay, createBlueprintAccordion, createPricingCard, createStatItem, createRoadmapItem, createFaqItem, createMarketDynamics, createSecondaryCTANote, createABetterWaySection, createWhoThisIsForSection } from './components.js';
+import { emailTemplates as allEmailTemplates, langConfig } from './email-templates.js';
 
-const LANG = 'en';
-const TIDY_LINKS = {
-    discovery: 'https://tidycal.com/strategyandstack/discovery',
-    strategy: 'https://tidycal.com/strategyandstack/strategy'
-};
-
-const emailTemplates = {
-    linkedin: `{{RANDOM | Hi {{firstName}} | Hello {{firstName}} | {{firstName}},}} this is a cold message and I know you get many, so I'll keep it brief.
-
-We've helped more than 105 professionals turn their LinkedIn presence into a consistent source of leads.
-
-{{RANDOM | We are opening | We're launching}} an end-of-year bundle for just 12 clients.
-
-{{RANDOM | Inside you get | This includes}} a complete LinkedIn profile upgrade, plus 1 full month of done-for-you managed outreach.
-
-{{RANDOM | If this feels worth exploring | If this sounds interesting}}, reply "Yes" and I'll share my calendar link.`,
-
-    cold: `Subject: {{RANDOM | Quick question about {{companyName}} | {{firstName}}, saw your work at {{companyName}}}}
-
-{{RANDOM | Hi {{firstName}} | Hello {{firstName}}}},
-
-{{RANDOM | I noticed | I saw}} {{companyName}} {{RANDOM | is scaling rapidly | has been growing}} and thought you might be interested in how we've helped similar {{industry}} companies {{RANDOM | 3x their pipeline | book 40+ meetings monthly}}.
-
-We build done-for-you outbound systems that {{RANDOM | run on autopilot | scale without adding headcount}}.
-
-{{RANDOM | Would it make sense | Would you be open}} to chat for 15 minutes this week?
-
-{{RANDOM | Best | Cheers}},
-{{senderName}}`,
-
-    followup: `{{RANDOM | Hi {{firstName}} | Hey {{firstName}}}},
-
-{{RANDOM | Following up on my last message | Wanted to circle back}} - {{RANDOM | I know you're busy | things get buried}}.
-
-We help {{industry}} companies like {{companyName}} build outbound systems that {{RANDOM | generate leads on autopilot | book 30-50 meetings per month}}.
-
-{{RANDOM | Worth a 10-minute call? | Would a quick chat make sense?}}
-
-{{RANDOM | {{senderName}} | Best, {{senderName}}}}`,
-
-    breakup: `{{RANDOM | Hi {{firstName}} | Hey {{firstName}}}},
-
-{{RANDOM | I've reached out a few times | This is my last follow-up}} - {{RANDOM | I don't want to keep filling your inbox | I respect your time}}.
-
-{{RANDOM | If building a predictable outbound engine isn't a priority right now | If now isn't the right time}}, {{RANDOM | totally understand | no worries}}.
-
-{{RANDOM | But if anything changes | When you're ready}}, {{RANDOM | my door is always open | you know where to find me}}.
-
-{{RANDOM | {{senderName}} | All the best, {{senderName}}}}`
-};
+// Detect language from <html lang="..."> attribute
+const LANG = document.documentElement.lang || 'en';
+const config = langConfig[LANG] || langConfig.en;
+const TIDY_LINKS = config.tidyLinks;
+const emailTemplates = allEmailTemplates[LANG] || allEmailTemplates.en;
 
 let currentBlueprintIndex = 0;
 let typingTimer = null;
@@ -59,11 +14,10 @@ let ctaHoverTimeout = null;
 let blurOverlay = null;
 
 // === Scheduling helpers ===
-// Yields one paint frame then executes — for content the user will see soon.
 function afterPaint(fn) {
     requestAnimationFrame(() => setTimeout(fn, 0));
 }
-// For truly optional cosmetic features — uses idle time or falls back to 200ms delay.
+
 function whenIdle(fn) {
     if ('requestIdleCallback' in window) {
         requestIdleCallback(fn, { timeout: 3000 });
@@ -72,12 +26,21 @@ function whenIdle(fn) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    if (!data) return;
+// Resolve the correct data module based on language
+const dataPath = LANG === 'es' ? './es/data-es.js' : './data.js';
 
+import(dataPath).then(module => {
+    const data = module.salesArchitectureData;
+    if (!data) return;
+    boot(data);
+}).catch(err => {
+    console.error('Failed to load data module:', err);
+});
+
+function boot(data) {
     // --- Critical path (sync) ---
     initBlurOverlay();
-    initLayoutCritical();
+    initLayoutCritical(data);
     initBookingModal();
     initSmoothScroll();
     initUnifiedScrollHandler();
@@ -93,15 +56,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- After first paint: populate below-fold content ---
     afterPaint(() => {
-        initLayoutDeferred();
-        initSectionReveals(); // Re-observe newly injected .section-reveal elements
-        initBlueprintInteraction();
+        initLayoutDeferred(data);
+        initSectionReveals();
+        initBlueprintInteraction(data);
         initBlueprintAccordion();
         initEmailEditor();
         initRoadmapAnimation();
         initFaqAnimations();
         initStatsCounter();
-        // Re-create icons for newly injected below-fold content
         try { if (typeof lucide !== 'undefined') lucide.createIcons(); } catch (e) { }
     });
 
@@ -110,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
         initMouseGlow();
         initCTAFocusEffect();
     });
-});
+}
 
 function initBlurOverlay() {
     blurOverlay = document.createElement('div');
@@ -130,7 +92,6 @@ function initMouseGlow() {
         glowY += (mouseY - glowY) * 0.1;
         glow.style.transform = `translate3d(${glowX}px, ${glowY}px, 0) translate(-50%, -50%)`;
 
-        // Stop the loop once we've converged
         if (Math.abs(mouseX - glowX) < 0.5 && Math.abs(mouseY - glowY) < 0.5) {
             animating = false;
             return;
@@ -141,7 +102,6 @@ function initMouseGlow() {
     document.addEventListener('mousemove', (e) => {
         mouseX = e.clientX;
         mouseY = e.clientY;
-        // Restart the animation loop only if it isn't already running
         if (!animating) {
             animating = true;
             requestAnimationFrame(animate);
@@ -150,7 +110,6 @@ function initMouseGlow() {
 }
 
 // === Unified Scroll Handler ===
-// All scroll-dependent logic is consolidated here to avoid multiple listeners.
 function initUnifiedScrollHandler() {
     const callbacks = [];
 
@@ -254,19 +213,16 @@ function initSmoothScroll() {
             if (target) {
                 e.preventDefault();
 
-                // Immediately set correct nav highlight
                 if (navLinks) {
                     navLinks.forEach(link => link.classList.toggle('active', link.getAttribute('href') === href));
                 }
 
-                // Disconnect observer during scroll to prevent intermediate sections from triggering
                 if (navObserver && navSections) {
                     navObserver.disconnect();
                 }
 
                 target.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-                // Re-observe after scroll finishes (~600ms for smooth scroll)
                 setTimeout(() => {
                     if (navObserver && navSections) {
                         navSections.forEach(section => navObserver.observe(section));
@@ -277,8 +233,6 @@ function initSmoothScroll() {
     });
 }
 
-// Editor scroll effect is now handled by the unified scroll handler
-
 function clearAllFocusEffects() {
     if (ctaHoverTimeout) { clearTimeout(ctaHoverTimeout); ctaHoverTimeout = null; }
     blurOverlay.classList.remove('active');
@@ -287,8 +241,6 @@ function clearAllFocusEffects() {
 }
 
 function initCTAFocusEffect() {
-    // Use mouseover/mouseout with relatedTarget checks to avoid flicker
-    // from capture-phase mouseenter/mouseleave firing on every child element.
     let activeCTA = null;
 
     document.addEventListener('mouseover', (e) => {
@@ -297,8 +249,6 @@ function initCTAFocusEffect() {
         clearAllFocusEffects();
         activeCTA = cta;
         ctaHoverTimeout = setTimeout(() => {
-            // Skip blur overlay for blueprint CTAs — sticky positioning
-            // creates a stacking context that can't escape above the fixed overlay
             const isBlueprint = cta.closest('.blueprint-display, .blueprint-dashboard');
             if (!isBlueprint) {
                 blurOverlay.classList.add('active');
@@ -312,12 +262,10 @@ function initCTAFocusEffect() {
     document.addEventListener('mouseout', (e) => {
         const cta = e.target.closest('.btn-primary, .btn-secondary, .display-cta, .pricing-cta');
         if (!cta) return;
-        // Only clear if we are truly leaving the CTA (not moving to a child)
         if (cta.contains(e.relatedTarget)) return;
         activeCTA = null;
         clearAllFocusEffects();
     });
-    // CTA focus clear on scroll is now handled by the unified scroll handler
 }
 
 function initSectionReveals() {
@@ -348,22 +296,20 @@ function initBookingModal() {
         const baseUrl = TIDY_LINKS[type] || TIDY_LINKS.discovery;
         const trackingUrl = `${baseUrl}?utm_source=Website&utm_medium=CTA&utm_campaign=${code}`;
 
-        // Reset loader and title
         if (loader) loader.style.opacity = '1';
-        if (modalTitle) modalTitle.textContent = type === 'strategy' ? 'Sales Strategy Session' : 'Discovery Call';
-        if (modalSubtitle) modalSubtitle.textContent = type === 'strategy' ? '30 minutes • Working Session' : '15 minutes • Alignment Check';
+        const modalText = config.modal[type] || config.modal.discovery;
+        if (modalTitle) modalTitle.textContent = modalText.title;
+        if (modalSubtitle) modalSubtitle.textContent = modalText.subtitle;
 
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
 
-        // Animate modal in
         gsap.to(modal, { opacity: 1, duration: 0.4, ease: 'power2.out' });
         gsap.fromTo('.booking-modal-content-wrapper',
             { y: 30, scale: 0.98 },
             { y: 0, scale: 1, duration: 0.5, ease: 'power2.out', delay: 0.1 }
         );
 
-        // Load iframe
         const iframe = document.createElement('iframe');
         iframe.src = trackingUrl;
         iframe.title = 'TidyCal Booking';
@@ -399,7 +345,6 @@ function initBookingModal() {
         if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
     });
 
-    // Event delegation for all booking buttons
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('.open-booking');
         if (btn) {
@@ -411,10 +356,8 @@ function initBookingModal() {
     });
 }
 
-// Mobile sticky CTA is now handled by the unified scroll handler
-
 // === Layout: Critical above-fold content (sync) ===
-function initLayoutCritical() {
+function initLayoutCritical(data) {
     document.title = data.meta.name + " | " + data.meta.tagline;
 
     const statsGrid = document.getElementById('stats-grid');
@@ -426,19 +369,19 @@ function initLayoutCritical() {
     if (footerPowered) footerPowered.textContent = data.footer.powered_by;
 }
 
-// === Layout: Below-fold content (deferred via idle callback) ===
-function initLayoutDeferred() {
-    // Inject A Better Way section
+// === Layout: Below-fold content (deferred) ===
+function initLayoutDeferred(data) {
     const aBetterWayContainer = document.getElementById('a-better-way-container');
     if (aBetterWayContainer && data.a_better_way) {
         aBetterWayContainer.innerHTML = createABetterWaySection(data.a_better_way, LANG);
     }
 
+    const vp = config.valueProps;
     const vpContainer = document.getElementById('value-props');
     if (vpContainer) {
-        vpContainer.innerHTML = createValuePropCard('Battle Tested', data.value_proposition.supporting, 'layers') +
-            createValuePropCard('Full Ownership', 'We build on your infrastructure. Accounts, data, and content stay with you forever.', 'key') +
-            createValuePropCard('The Outcome', data.value_proposition.outcome, 'rocket');
+        vpContainer.innerHTML = createValuePropCard(vp.battleTested, data.value_proposition.supporting, 'layers') +
+            createValuePropCard(vp.fullOwnership, vp.fullOwnershipDesc, 'key') +
+            createValuePropCard(vp.theOutcome, data.value_proposition.outcome, 'rocket');
     }
 
     const gList = document.getElementById('guarantees-list');
@@ -471,7 +414,6 @@ ${createBlueprintAccordion(data.blueprints, LANG)}`;
         }, 100);
     }
 
-    // Inject Who This Is For section
     const whoThisIsForContainer = document.getElementById('who-this-is-for-container');
     if (whoThisIsForContainer && data.who_this_is_for) {
         whoThisIsForContainer.innerHTML = createWhoThisIsForSection(data.who_this_is_for, LANG);
@@ -553,7 +495,11 @@ function initFaqAnimations() {
     });
 }
 
-function initBlueprintInteraction() {
+// Store data reference for blueprint interaction
+let _blueprintsData = null;
+
+function initBlueprintInteraction(data) {
+    _blueprintsData = data;
     const navItems = document.querySelectorAll('.blueprint-nav-item');
     const display = document.getElementById('blueprint-display');
     if (!navItems.length || !display) return;
@@ -584,7 +530,7 @@ function initBlueprintAccordion() {
 
 function loadBlueprint(index) {
     const display = document.getElementById('blueprint-display');
-    const bp = data.blueprints[index];
+    const bp = _blueprintsData?.blueprints[index];
     if (!display || !bp) return;
     currentBlueprintIndex = index;
     display.classList.remove('scanning', 'active');
@@ -594,7 +540,6 @@ function loadBlueprint(index) {
     animateBlueprintContent(bp);
     setTimeout(() => display.classList.add('active'), 700);
     setTimeout(() => animateHoursBars(), 100);
-    // CTA focus effect is handled by delegated listeners — no re-init needed
     try {
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
@@ -608,11 +553,9 @@ function animateBlueprintContent(bp) {
     const display = document.getElementById('blueprint-display');
     const mixedChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-    // Title - immediate cipher (uppercase charset)
     const title = display.querySelector('.display-title');
     if (title) scrambleText(title, bp.name.toUpperCase(), { speed: 45, charsPerTick: 1 });
 
-    // Description & Timeline - cipher with stagger
     display.querySelectorAll('.display-description, .display-timeline').forEach((el, i) => {
         const text = el.textContent;
         const html = el.innerHTML;
@@ -625,7 +568,6 @@ function animateBlueprintContent(bp) {
         }, 200 + i * 150);
     });
 
-    // Feature list items - cipher staggered
     display.querySelectorAll('.feature-list li').forEach((el, i) => {
         const text = el.textContent;
         el.style.opacity = '0';
@@ -636,7 +578,6 @@ function animateBlueprintContent(bp) {
         }, 400 + i * 80);
     });
 
-    // Footer - price gets cipher, whole footer fades in
     const footer = display.querySelector('.display-footer');
     if (footer) {
         footer.style.opacity = '0';
@@ -658,7 +599,6 @@ function scrambleText(element, targetText, options = {}) {
     const charsPerTick = options.charsPerTick || 3;
     const restoreHTML = options.restoreHTML || null;
     let iteration = 0;
-    // Immediately show scrambled text (no flash of real content)
     element.textContent = targetText.split('').map(char =>
         (char === ' ' || char === '\n') ? char : chars[Math.floor(Math.random() * chars.length)]
     ).join('');
@@ -734,7 +674,6 @@ function typeText(tabName) {
     isTyping = true;
     const highlightedText = highlightSyntax(template);
 
-    // Parse the highlighted text into individual character elements inside their spans
     const container = document.createElement('div');
     container.style.display = 'inline';
     container.innerHTML = highlightedText;
@@ -742,7 +681,7 @@ function typeText(tabName) {
     const charsToType = [];
 
     function processNode(node) {
-        if (node.nodeType === 3) { // Node.TEXT_NODE
+        if (node.nodeType === 3) {
             const text = node.nodeValue;
             const fragment = document.createDocumentFragment();
             for (let i = 0; i < text.length; i++) {
@@ -753,7 +692,7 @@ function typeText(tabName) {
                 charsToType.push(charSpan);
             }
             node.parentNode.replaceChild(fragment, node);
-        } else if (node.nodeType === 1) { // Node.ELEMENT_NODE
+        } else if (node.nodeType === 1) {
             Array.from(node.childNodes).forEach(processNode);
         }
     }
@@ -781,12 +720,10 @@ function typeText(tabName) {
             return;
         }
 
-        // Make cursor visible once typing starts
         if (cursor.style.visibility === 'hidden') cursor.style.visibility = 'visible';
         const charSpan = charsToType[charIndex];
         charSpan.style.opacity = '1';
 
-        // Humanize typing speed
         let delay = (10 + Math.random() * 15) * 0.7;
         const char = charSpan.textContent;
         if (char === ' ') delay += 7;
@@ -804,7 +741,6 @@ function typeText(tabName) {
 function highlightSyntax(text) {
     let escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-    // Token color mapping
     const tokenColors = {
         'firstName': 'syntax-firstname',
         'senderName': 'syntax-sender',
@@ -812,13 +748,11 @@ function highlightSyntax(text) {
         'industry': 'syntax-industry'
     };
 
-    // Helper to colorize a single token
     const colorizeToken = (match, varName) => {
         const colorClass = tokenColors[varName] || 'syntax-variable';
         return `<span class="${colorClass}">{{${varName}}}</span>`;
     };
 
-    // Process RANDOM blocks - improved regex to handle nested tokens
     escaped = escaped.replace(/\{\{RANDOM\s*\|((?:[^{}]|\{\{[^}]+\}\})+)\}\}/g, (m, content) => {
         const parts = content.split('|').map(p => p.trim());
         const highlighted = parts.map((part, i) => {
@@ -828,7 +762,6 @@ function highlightSyntax(text) {
         return `<span class="syntax-random">{{RANDOM}}</span> ${highlighted}`;
     });
 
-    // Process remaining standalone tokens
     return escaped.replace(/\{\{(\w+)\}\}/g, colorizeToken);
 }
 
@@ -846,4 +779,3 @@ function initStatsCounter() {
     }, { threshold: 0.5 });
     stats.forEach(stat => observer.observe(stat));
 }
-

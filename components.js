@@ -1,3 +1,6 @@
+// Compute asset base path once — ES pages live in /es/ so assets are one level up.
+const ASSET_BASE = document.documentElement.lang === 'es' ? '../' : '';
+
 export const createValuePropCard = (title, description, icon) => `
 <div class="glass-card p-6 rounded-xl border-white/10 group hover:border-white/20 transition-all duration-500 section-reveal">
     <div style="width:40px;height:40px;min-width:40px" class="bg-white/5 rounded-lg flex items-center justify-center mb-5 border border-white/10 group-hover:scale-110 transition-transform">
@@ -40,7 +43,7 @@ export const createABetterWaySection = (data, lang = 'en') => {
             <div class="better-way-card solution-card glass-card p-8 rounded-2xl border-white/10 relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-purple-500/50 to-cyan-500/50"></div>
                 <div class="solution-badge inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 mb-6">
-                    <img src="${lang === 'es' ? '../' : ''}favicon.svg" alt="" class="w-3.5 h-3.5" width="14" height="14">
+                    <img src="${ASSET_BASE}favicon.svg" alt="" class="w-3.5 h-3.5" width="14" height="14">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-purple-400">${solution.badge}</span>
                 </div>
                 <h3 class="text-2xl md:text-3xl font-black mb-4 tracking-tight">${solution.title}</h3>
@@ -67,7 +70,7 @@ export const createWhoThisIsForSection = (data, lang = 'en') => {
         <div class="grid lg:grid-cols-2 gap-12 items-center">
             <div class="section-reveal">
                 <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 mb-6">
-                    <img src="${lang === 'es' ? '../' : ''}favicon.svg" alt="" class="w-3.5 h-3.5" width="14" height="14">
+                    <img src="${ASSET_BASE}favicon.svg" alt="" class="w-3.5 h-3.5" width="14" height="14">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-purple-400">${data.section_label}</span>
                 </div>
                 <h2 class="text-3xl md:text-4xl font-black mb-4 tracking-tighter">${data.section_title}</h2>
