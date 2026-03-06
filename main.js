@@ -84,28 +84,34 @@ function initMouseGlow() {
     const glow = document.createElement('div');
     glow.className = 'mouse-glow';
     document.body.appendChild(glow);
-    let mouseX = 0, mouseY = 0, glowX = 0, glowY = 0;
-    let animating = false;
 
-    function animate() {
-        glowX += (mouseX - glowX) * 0.1;
-        glowY += (mouseY - glowY) * 0.1;
-        glow.style.transform = `translate3d(${glowX}px, ${glowY}px, 0) translate(-50%, -50%)`;
+    let targetX = -600, targetY = -600;
+    let currentX = -600, currentY = -600;
+    let ticking = false;
 
-        if (Math.abs(mouseX - glowX) < 0.5 && Math.abs(mouseY - glowY) < 0.5) {
-            animating = false;
-            return;
+    function updatePosition() {
+        currentX += (targetX - currentX) * 0.15;
+        currentY += (targetY - currentY) * 0.15;
+        glow.style.transform = `translate3d(${currentX - 300}px, ${currentY - 300}px, 0)`;
+
+        if (Math.abs(targetX - currentX) > 0.5 || Math.abs(targetY - currentY) > 0.5) {
+            requestAnimationFrame(updatePosition);
+        } else {
+            ticking = false;
         }
-        requestAnimationFrame(animate);
+    }
+
+    function startTicking() {
+        if (!ticking) {
+            ticking = true;
+            requestAnimationFrame(updatePosition);
+        }
     }
 
     document.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-        if (!animating) {
-            animating = true;
-            requestAnimationFrame(animate);
-        }
+        targetX = e.clientX;
+        targetY = e.clientY;
+        startTicking();
     }, { passive: true });
 }
 
